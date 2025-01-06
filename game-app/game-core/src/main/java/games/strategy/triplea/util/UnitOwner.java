@@ -6,8 +6,10 @@ import games.strategy.engine.data.GamePlayer;
 import games.strategy.engine.data.Unit;
 import games.strategy.engine.data.UnitType;
 import java.util.Objects;
+import lombok.Getter;
 
 /** The combination of a unit type and its owner. */
+@Getter
 public final class UnitOwner {
   private final UnitType type;
   private final GamePlayer owner;
@@ -37,14 +39,6 @@ public final class UnitOwner {
 
   @Override
   public String toString() {
-    return "Unit owner:" + owner.getName() + " type:" + type.getName();
-  }
-
-  public UnitType getType() {
-    return type;
-  }
-
-  public GamePlayer getOwner() {
-    return owner;
+    return "Unit owner: " + owner.getName() + " type: " + type.getName();
   }
 }

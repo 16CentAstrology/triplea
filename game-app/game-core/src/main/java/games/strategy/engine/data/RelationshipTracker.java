@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Getter;
 
 /**
  * A collection of relationships between any two players. Provides methods that determine whether
@@ -243,6 +244,7 @@ public class RelationshipTracker extends GameDataComponent {
   }
 
   /** Represents the establishment of a particular type of relationship within the game. */
+  @Getter
   public class Relationship implements Serializable {
     private static final long serialVersionUID = -6718866176901627180L;
 
@@ -261,17 +263,9 @@ public class RelationshipTracker extends GameDataComponent {
       this.roundCreated = roundValue;
     }
 
-    public int getRoundCreated() {
-      return roundCreated;
-    }
-
-    public RelationshipType getRelationshipType() {
-      return relationshipType;
-    }
-
     @Override
     public String toString() {
-      return roundCreated + ":" + relationshipType;
+      return roundCreated + ": " + relationshipType;
     }
   }
 }

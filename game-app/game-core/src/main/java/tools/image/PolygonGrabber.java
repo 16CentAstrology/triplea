@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
@@ -181,7 +182,7 @@ public final class PolygonGrabber {
           new MouseMotionAdapter() {
             @Override
             public void mouseMoved(final MouseEvent e) {
-              location.setText("x:" + e.getX() + " y:" + e.getY());
+              location.setText("x: " + e.getX() + " y: " + e.getY());
             }
           });
       /*
@@ -246,8 +247,8 @@ public final class PolygonGrabber {
                 g.drawImage(bufferedImage, 0, 0, null);
                 for (final String territoryName : centers.keySet()) {
                   final Point center = centers.get(territoryName);
-                  log.info("Detecting Polygon for:" + territoryName);
-                  final Polygon p = findPolygon(center.x, center.y);
+                  log.info("Detecting Polygon for: " + territoryName);
+                  final @Nullable Polygon p = findPolygon(center.x, center.y);
                   // test if the poly contains the center point (this often fails when there is an
                   // island right above (because findPolygon will grab the island instead)
                   if (p == null || !p.contains(center)) {
@@ -433,7 +434,7 @@ public final class PolygonGrabber {
       }
       try {
         PointFileReaderWriter.writeOneToManyPolygons(polyName, polygons);
-        log.info("Data written to :" + polyName.normalize().toAbsolutePath());
+        log.info("Data written to: " + polyName.normalize().toAbsolutePath());
       } catch (final IOException e) {
         log.error("Failed to save polygons: " + polyName, e);
       }
@@ -442,7 +443,7 @@ public final class PolygonGrabber {
     /** Loads a pre-defined file with map polygon points. */
     private void loadPolygons() {
       log.info("Load a polygon file");
-      final Path polyName =
+      final @Nullable Path polyName =
           new FileOpen("Load A Polygon File", mapFolderLocation, ".txt").getFile();
       if (polyName == null) {
         return;
@@ -456,7 +457,7 @@ public final class PolygonGrabber {
     }
 
     private void mouseEvent(final Point point, final boolean ctrlDown, final boolean rightMouse) {
-      final Polygon p = findPolygon(point.x, point.y);
+      final @Nullable Polygon p = findPolygon(point.x, point.y);
       if (p == null) {
         return;
       }
@@ -558,7 +559,7 @@ public final class PolygonGrabber {
      */
     private void move(final Point p, final int direction) {
       if (direction < 0 || direction > 7) {
-        throw new IllegalArgumentException("Not a direction :" + direction);
+        throw new IllegalArgumentException("Not a direction : " + direction);
       }
       if (direction == 1 || direction == 2 || direction == 3) {
         p.x++;
@@ -608,7 +609,7 @@ public final class PolygonGrabber {
     }
 
     /** Algorithm to find a polygon given a x/y coordinates and returns the found polygon. */
-    private Polygon findPolygon(final int x, final int y) {
+    private @Nullable Polygon findPolygon(final int x, final int y) {
       // walk up, find the first black point
       final Point startPoint = new Point(x, y);
       while (inBounds(startPoint.x, startPoint.y - 1, bufferedImage)

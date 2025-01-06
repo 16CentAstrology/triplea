@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import org.triplea.java.collections.CollectionUtils;
 import org.triplea.java.collections.IntegerMap;
 
@@ -19,7 +20,7 @@ public class UnitCollection extends GameDataComponent implements Collection<Unit
   private static final long serialVersionUID = -3534037864426122864L;
 
   private final List<Unit> units = new ArrayList<>();
-  private final NamedUnitHolder holder;
+  @Getter private final NamedUnitHolder holder;
 
   public UnitCollection(final NamedUnitHolder holder, final GameData data) {
     super(data);
@@ -83,7 +84,7 @@ public class UnitCollection extends GameDataComponent implements Collection<Unit
       return new ArrayList<>();
     }
     if (maxUnits < 0) {
-      throw new IllegalArgumentException("value must be positive.  Instead its:" + maxUnits);
+      throw new IllegalArgumentException("value must be positive.  Instead its: " + maxUnits);
     }
     final Collection<Unit> units = new ArrayList<>();
     for (final Unit current : this.units) {
@@ -161,7 +162,7 @@ public class UnitCollection extends GameDataComponent implements Collection<Unit
     return count;
   }
 
-  public List<GamePlayer> getPlayersByUnitCount() {
+  public List<GamePlayer> getPlayersSortedByUnitCount() {
     final IntegerMap<GamePlayer> map = getPlayerUnitCounts();
     final List<GamePlayer> players = new ArrayList<>(map.keySet());
     players.sort(Comparator.comparingInt(map::getInt).reversed());
@@ -170,10 +171,6 @@ public class UnitCollection extends GameDataComponent implements Collection<Unit
 
   public boolean hasUnitsFromMultiplePlayers() {
     return getPlayersWithUnits().size() > 1;
-  }
-
-  public NamedUnitHolder getHolder() {
-    return holder;
   }
 
   public boolean allMatch(final Predicate<Unit> matcher) {
@@ -226,19 +223,36 @@ public class UnitCollection extends GameDataComponent implements Collection<Unit
 
   @Override
   public boolean remove(final Object object) {
-    final boolean result = units.remove(object);
-    holder.notifyChanged();
-    return result;
+    final boolean changed = units.remove(object);
+    if (changed) {
+      holder.notifyChanged();
+    }
+    return changed;
+  }
+
+  @Override
+  public boolean removeIf(final Predicate<? super Unit> predicate) {
+    final boolean changed = units.removeIf(predicate);
+    if (changed) {
+      holder.notifyChanged();
+    }
+    return changed;
   }
 
   @Override
   public boolean retainAll(final Collection<?> collection) {
-    return units.retainAll(collection);
+    final boolean changed = units.retainAll(collection);
+    if (changed) {
+      holder.notifyChanged();
+    }
+    return changed;
   }
 
   @Override
   public void clear() {
-    units.clear();
-    holder.notifyChanged();
+    if (!units.isEmpty()) {
+      units.clear();
+      holder.notifyChanged();
+    }
   }
 }

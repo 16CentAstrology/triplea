@@ -253,7 +253,7 @@ public class TileManager {
     drawing.add(new BattleDrawable(territory.getName()));
     final TerritoryAttachment ta = TerritoryAttachment.get(territory);
     if (!territory.isWater()) {
-      drawing.add(new LandTerritoryDrawable(territory.getName()));
+      drawing.add(new LandTerritoryDrawable(territory));
     } else {
       if (ta != null) {
         // Kamikaze Zones
@@ -309,7 +309,7 @@ public class TileManager {
       final Set<IDrawable> drawing) {
     final Iterator<Point> placementPoints = mapData.getPlacementPoints(territory).iterator();
     if (!placementPoints.hasNext()) {
-      throw new IllegalStateException("No where to place units:" + territory.getName());
+      throw new IllegalStateException("No where to place units: " + territory.getName());
     }
 
     Point lastPlace = null;
@@ -482,7 +482,7 @@ public class TileManager {
   }
 
   /**
-   * Returns the rectangle within which all of the specified units will be drawn stacked or {@code
+   * Returns the rectangle within which all the specified units will be drawn stacked or {@code
    * null} if no such rectangle exists. Because the units are assumed to be drawn stacked, the
    * returned rectangle will always have a size equal to the standard unit image size.
    */

@@ -25,6 +25,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.awt.OpenFileUtility;
 import org.triplea.yaml.YamlReader;
 
@@ -35,8 +36,10 @@ import org.triplea.yaml.YamlReader;
  */
 public class NodeBbForumPoster {
 
+  @NonNls
   public static final String AXIS_AND_ALLIES_ORG_DISPLAY_NAME = "www.axisandallies.org/forums/";
-  public static final String TRIPLEA_FORUM_DISPLAY_NAME = "forums.triplea-game.org";
+
+  @NonNls public static final String TRIPLEA_FORUM_DISPLAY_NAME = "forums.triplea-game.org";
 
   private final int topicId;
   private final String token;
@@ -71,14 +74,14 @@ public class NodeBbForumPoster {
         return new NodeBbForumPoster(
             ForumPostingParameters.builder()
                 .topicId(topicId)
-                .token(ClientSetting.tripleaForumToken.getValueOrThrow())
+                .token(ClientSetting.tripleaForumToken.getValue().orElse(new char[0]))
                 .forumUrl(UrlConstants.TRIPLEA_FORUM)
                 .build());
       case NodeBbForumPoster.AXIS_AND_ALLIES_ORG_DISPLAY_NAME:
         return new NodeBbForumPoster(
             ForumPostingParameters.builder()
                 .topicId(topicId)
-                .token(ClientSetting.aaForumToken.getValueOrThrow())
+                .token(ClientSetting.aaForumToken.getValue().orElse(new char[0]))
                 .forumUrl(UrlConstants.AXIS_AND_ALLIES_FORUM)
                 .build());
       default:
@@ -97,7 +100,6 @@ public class NodeBbForumPoster {
    *
    * @param summary the forum summary
    * @param title the forum title
-   * @return true if the post was successful
    */
   public CompletableFuture<String> postTurnSummary(
       final String summary, final String title, @Nullable final SaveGameParameter saveGame) {
@@ -163,7 +165,7 @@ public class NodeBbForumPoster {
         return parseSaveGameUrlFromJsonResponse(json);
       }
       throw new IllegalStateException(
-          "Failed to upload savegame, server returned Error Code "
+          "Failed to upload save game, server returned Error Code "
               + status
               + "\nMessage:\n"
               + EntityUtils.toString(response.getEntity()));

@@ -19,6 +19,7 @@ class Decoder {
   private final ErrorReporter errorReporter;
   private final IObjectStreamFactory objectStreamFactory;
   private final NioSocket nioSocket;
+
   /**
    * These sockets are quarantined. They have not logged in, and messages read from them are not
    * passed outside of the quarantine conversation.
@@ -78,7 +79,7 @@ class Decoder {
               throw new IllegalStateException("we are writing messages, but no local node");
             }
             if (header.getFrom() == null) {
-              throw new IllegalArgumentException("Null from:" + header);
+              throw new IllegalArgumentException("Null from: " + header);
             }
             nioSocket.messageReceived(header, data.getChannel());
           }

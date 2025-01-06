@@ -17,6 +17,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
+import org.jetbrains.annotations.NonNls;
 
 /**
  * A vault is a secure way for the client and server to share information without trusting each
@@ -34,7 +35,7 @@ import javax.crypto.spec.DESKeySpec;
 public class Vault {
   private static final RemoteName VAULT_CHANNEL =
       new RemoteName("games.strategy.engine.vault.IServerVault.VAULT_CHANNEL", IRemoteVault.class);
-  private static final String ALGORITHM = "DES";
+  @NonNls private static final String ALGORITHM = "DES";
   // 0xCAFEBABE
   // we encrypt both this value and data when we encrypt data.
   // when decrypting we ensure that KNOWN_VAL is correct and thus guarantee that we are being given
@@ -59,7 +60,7 @@ public class Vault {
             return;
           }
           if (unverifiedValues.putIfAbsent(id, data) != null) {
-            throw new IllegalStateException("duplicate values for id:" + id);
+            throw new IllegalStateException("duplicate values for id: " + id);
           }
           synchronized (waitForLock) {
             waitForLock.notifyAll();
@@ -104,7 +105,7 @@ public class Vault {
           final byte[] data = new byte[decrypted.length - KNOWN_VAL.length];
           System.arraycopy(decrypted, KNOWN_VAL.length, data, 0, data.length);
           if (verifiedValues.putIfAbsent(id, data) != null) {
-            throw new IllegalStateException("duplicate values for id:" + id);
+            throw new IllegalStateException("duplicate values for id: " + id);
           }
           synchronized (waitForLock) {
             waitForLock.notifyAll();
@@ -125,7 +126,7 @@ public class Vault {
       secretKeyFactory = SecretKeyFactory.getInstance(ALGORITHM);
       keyGen = KeyGenerator.getInstance(ALGORITHM);
     } catch (final NoSuchAlgorithmException e) {
-      throw new IllegalStateException("Nothing known about algorithm:" + ALGORITHM, e);
+      throw new IllegalStateException("Nothing known about algorithm: " + ALGORITHM, e);
     }
   }
 
@@ -168,7 +169,7 @@ public class Vault {
     final VaultId id = new VaultId(channelMessenger.getLocalNode());
     final SecretKey key = keyGen.generateKey();
     if (secretKeys.putIfAbsent(id, key) != null) {
-      throw new IllegalStateException("duplicate id:" + id);
+      throw new IllegalStateException("duplicate id: " + id);
     }
     // we already know it, so might as well keep it
     verifiedValues.put(id, data);
@@ -237,11 +238,11 @@ public class Vault {
     } else if (unverifiedValues.containsKey(id)) {
       throw new NotUnlockedException();
     } else {
-      throw new IllegalStateException("Nothing known about id:" + id);
+      throw new IllegalStateException("Nothing known about id: " + id);
     }
   }
 
-  /** Do we know about the given vault id. */
+  /** {@code @TODO} Do we know about the given vault id? */
   public boolean knowsAbout(final VaultId id) {
     return verifiedValues.containsKey(id) || unverifiedValues.containsKey(id);
   }

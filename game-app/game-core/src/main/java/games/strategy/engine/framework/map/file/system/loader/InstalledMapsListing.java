@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -115,7 +116,7 @@ public class InstalledMapsListing {
   }
 
   private static String normalizeName(final String mapName) {
-    return mapName.toLowerCase().replaceAll("[_ -]", "");
+    return mapName.toLowerCase(Locale.ROOT).replaceAll("[_ -]", "");
   }
 
   /**
@@ -123,7 +124,16 @@ public class InstalledMapsListing {
    * directory of the 'map.yml' file describing that map.
    */
   public Optional<Path> findMapFolderByName(final String mapName) {
-    return findContentRootForMapName(mapName).map(Path::getParent);
+    return findContentRootForMapName(mapName)
+        .map(
+            p -> {
+              Path parent = p.getParent();
+              // Some maps have their content root be the map folder itself.
+              if (parent.equals(ClientFileSystemHelper.getUserMapsFolder())) {
+                return p;
+              }
+              return parent;
+            });
   }
 
   public Optional<Path> findMapSkin(final String mapName, final String skinName) {

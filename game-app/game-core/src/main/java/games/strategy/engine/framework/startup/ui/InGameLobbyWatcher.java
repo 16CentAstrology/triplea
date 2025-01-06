@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.http.client.lobby.game.lobby.watcher.GameListingClient;
 import org.triplea.http.client.lobby.game.lobby.watcher.GamePostingRequest;
 import org.triplea.http.client.lobby.game.lobby.watcher.GamePostingResponse;
@@ -123,6 +124,12 @@ public class InGameLobbyWatcher {
       // path will be a dead-end.
       shutDown();
       watcherThreadMessaging.handleCurrentGameHostNotReachable();
+
+      // Using return here to break out as this is a dead end.
+      // Initializing keepAliveTimer and connectionChangeListener to null as they won't be needed.
+      keepAliveTimer = null;
+      connectionChangeListener = null;
+      return;
     }
 
     gameId = gamePostingResponse.getGameId();
@@ -189,9 +196,10 @@ public class InGameLobbyWatcher {
     }
   }
 
+  @NonNls
   @VisibleForTesting
   static String getLobbySystemProperty(final String key) {
-    final String backupKey = key + ".backup";
+    @NonNls final String backupKey = key + ".backup";
     final @Nullable String value = System.getProperty(key);
     if (value != null) {
       System.setProperty(backupKey, value);
@@ -248,7 +256,11 @@ public class InGameLobbyWatcher {
 
   void shutDown() {
     isShutdown = true;
-    gameToLobbyConnection.disconnect(gameId);
+    // if gameId is not null (game was created in lobby successfully) send remove game message to
+    //  lobby now that game is to be shut down.
+    if (gameId != null) {
+      gameToLobbyConnection.disconnect(gameId);
+    }
     serverMessenger.removeConnectionChangeListener(connectionChangeListener);
     Optional.ofNullable(keepAliveTimer).ifPresent(ScheduledTimer::cancel);
     cleanUpGameModelListener();

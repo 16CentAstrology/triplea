@@ -55,9 +55,9 @@ public final class GameDataTestUtil {
   /**
    * Get the italian PlayerId for the given GameData object.
    *
-   * @return A italian PlayerId.
+   * @return An italian PlayerId.
    */
-  static GamePlayer italians(final GameState data) {
+  public static GamePlayer italians(final GameState data) {
     return data.getPlayerList().getPlayerId(Constants.PLAYER_NAME_ITALIANS);
   }
 
@@ -77,7 +77,7 @@ public final class GameDataTestUtil {
   /**
    * Get the american PlayerId for the given GameData object.
    *
-   * @return A american PlayerId.
+   * @return An american PlayerId.
    */
   public static GamePlayer americans(final GameState data) {
     return data.getPlayerList().getPlayerId(Constants.PLAYER_NAME_AMERICANS);
@@ -103,6 +103,10 @@ public final class GameDataTestUtil {
 
   public static GamePlayer britain(final GameState data) {
     return data.getPlayerList().getPlayerId("Britain");
+  }
+
+  public static GamePlayer french(final GameState data) {
+    return data.getPlayerList().getPlayerId(Constants.PLAYER_NAME_FRENCH);
   }
 
   /**
@@ -138,7 +142,7 @@ public final class GameDataTestUtil {
    * @return A Territory matching the given name if present, otherwise throwing an Exception.
    */
   public static Territory territory(final String name, final GameState data) {
-    return checkNotNull(data.getMap().getTerritory(name), "No territory:" + name);
+    return checkNotNull(data.getMap().getTerritory(name), "No territory: " + name);
   }
 
   /** Returns an armor UnitType object for the specified GameData object. */
@@ -389,7 +393,7 @@ public final class GameDataTestUtil {
     return (BidPlaceDelegate) data.getDelegate("placeBid");
   }
 
-  static void load(final Collection<Unit> units, final Route route) {
+  public static void load(final Collection<Unit> units, final Route route) {
     Preconditions.checkArgument(!units.isEmpty());
     final MoveDelegate moveDelegate = moveDelegate(route.getStart().getData());
     final Collection<Unit> transports =
@@ -405,7 +409,7 @@ public final class GameDataTestUtil {
     final String error =
         moveDelegate.performMove(new MoveDescription(units, route, unitsToTransports));
     if (error != null) {
-      throw new IllegalStateException("Illegal move:" + error);
+      throw new IllegalStateException("Illegal move: " + error);
     }
   }
 
@@ -414,11 +418,11 @@ public final class GameDataTestUtil {
     final String error =
         moveDelegate(route.getStart().getData()).performMove(new MoveDescription(units, route));
     if (error != null) {
-      throw new IllegalStateException("Illegal move:" + error);
+      throw new IllegalStateException("Illegal move: " + error);
     }
   }
 
-  static void assertMoveError(final Collection<Unit> units, final Route route) {
+  public static void assertMoveError(final Collection<Unit> units, final Route route) {
     Preconditions.checkArgument(!units.isEmpty());
     final String error = moveDelegate(route.getStart().getData()).move(units, route);
     if (error == null) {
@@ -432,14 +436,14 @@ public final class GameDataTestUtil {
     for (final IExecutable e : steps) {
       if (type.isInstance(e)) {
         if (indexOfType != -1) {
-          throw new IllegalStateException("More than one instance:" + steps);
+          throw new IllegalStateException("More than one instance: " + steps);
         }
         indexOfType = index;
       }
       index++;
     }
     if (indexOfType == -1) {
-      throw new IllegalStateException("No instance:" + steps);
+      throw new IllegalStateException("No instance: " + steps);
     }
     return indexOfType;
   }

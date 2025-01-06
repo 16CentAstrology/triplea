@@ -13,13 +13,14 @@ import games.strategy.engine.data.GameData;
 import games.strategy.engine.data.GamePlayer;
 import games.strategy.engine.data.properties.GameProperties;
 import games.strategy.engine.data.properties.IEditableProperty;
-import games.strategy.engine.framework.GameDataManager;
 import games.strategy.engine.framework.GameObjectStreamFactory;
+import games.strategy.engine.framework.GameRunner;
 import games.strategy.engine.framework.GameState;
 import games.strategy.engine.framework.message.PlayerListing;
 import games.strategy.engine.framework.startup.LobbyWatcherThread;
 import games.strategy.engine.framework.startup.launcher.LaunchAction;
 import games.strategy.engine.framework.startup.launcher.ServerLauncher;
+import games.strategy.engine.framework.startup.mc.messages.ModeratorMessage;
 import games.strategy.engine.framework.startup.ui.InGameLobbyWatcherWrapper;
 import games.strategy.engine.framework.startup.ui.PlayerTypes;
 import games.strategy.engine.framework.startup.ui.panels.main.game.selector.GameSelectorModel;
@@ -52,13 +53,13 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.game.chat.ChatModel;
 import org.triplea.http.client.lobby.game.hosting.request.GameHostingClient;
 import org.triplea.http.client.lobby.game.hosting.request.GameHostingResponse;
 import org.triplea.http.client.web.socket.client.connections.GameToLobbyConnection;
 import org.triplea.http.client.web.socket.messages.envelopes.remote.actions.PlayerBannedMessage;
 import org.triplea.http.client.web.socket.messages.envelopes.remote.actions.ShutdownServerMessage;
-import org.triplea.io.IoUtils;
 import org.triplea.java.Interruptibles;
 import org.triplea.java.ThreadRunner;
 import org.triplea.java.concurrency.AsyncRunner;
@@ -72,6 +73,7 @@ public class ServerModel extends Observable implements IConnectionChangeListener
           "games.strategy.engine.framework.ui.ServerStartup.SERVER_REMOTE",
           IServerStartupRemote.class);
 
+  @NonNls
   static final String CHAT_NAME = "games.strategy.engine.framework.ui.ServerStartup.CHAT_NAME";
 
   private final GameObjectStreamFactory objectStreamFactory = new GameObjectStreamFactory(null);
@@ -87,7 +89,7 @@ public class ServerModel extends Observable implements IConnectionChangeListener
   private IRemoteModelListener remoteModelListener = IRemoteModelListener.NULL_LISTENER;
   private final GameSelectorModel gameSelectorModel;
   private final LaunchAction launchAction;
-  private ChatModel chatModel;
+  @Getter private ChatModel chatModel;
   private ChatController chatController;
   private final Map<String, PlayerTypes.Type> localPlayerTypes = new HashMap<>();
   // while our server launcher is not null, delegate new/lost connections to it
@@ -216,6 +218,24 @@ public class ServerModel extends Observable implements IConnectionChangeListener
           new ServerMessenger(props.getName(), props.getPort(), objectStreamFactory);
       serverMessenger.addConnectionChangeListener(this);
 
+      // add moderator action handlers (eg: ban/disconnect)
+      serverMessenger.addMessageListener(
+          (msg, from) -> {
+            // check that message is from a moderator
+            if (msg instanceof ModeratorMessage) {
+              if (!serverMessenger.isModerator(from)) {
+                return;
+              }
+
+              ModeratorMessage moderatorMessage = (ModeratorMessage) msg;
+              if (moderatorMessage.isBan()) {
+                serverMessenger.banPlayer(moderatorMessage.getPlayerName());
+              } else if (moderatorMessage.isDisconnect()) {
+                serverMessenger.removeConnection(moderatorMessage.getPlayerName());
+              }
+            }
+          });
+
       messengers = new Messengers(serverMessenger);
       messengers.registerRemote(
           launchAction.getStartupRemote(new DefaultServerModelView()), SERVER_REMOTE_NAME);
@@ -258,22 +278,11 @@ public class ServerModel extends Observable implements IConnectionChangeListener
         gameHostingResponse = null;
       }
 
-      chatController = new ChatController(CHAT_NAME, messengers, node -> false);
+      chatController = new ChatController(CHAT_NAME, messengers, serverMessenger);
 
       // TODO: Project#4 Change no-op network sender to a real network bridge
       chatModel =
           launchAction.createChatModel(CHAT_NAME, messengers, ClientNetworkBridge.NO_OP_SENDER);
-
-      if (gameToLobbyConnection != null && lobbyWatcherThread != null) {
-        chatModel
-            .getChat()
-            .addChatListener(
-                ServerChatUpload.builder()
-                    .gameToLobbyConnection(gameToLobbyConnection)
-                    .hostName(messengers.getLocalNode().getPlayerName())
-                    .gameIdSupplier(() -> lobbyWatcherThread.getGameId().orElse(null))
-                    .build());
-      }
 
       serverMessenger.setAcceptNewConnections(true);
       gameDataChanged();
@@ -288,6 +297,10 @@ public class ServerModel extends Observable implements IConnectionChangeListener
     } catch (final IOException e) {
       log.error("Unable to create server socket.", e);
       cancel();
+      if (GameRunner.headless()) {
+        log.error("Failed to connect to lobby, shutting down.");
+        ExitStatus.FAILURE.exit();
+      }
     }
     return null;
   }
@@ -337,7 +350,7 @@ public class ServerModel extends Observable implements IConnectionChangeListener
       playersEnabledListing.put(playerName, enabled);
       if (launchAction.shouldMinimizeExpensiveAiUse()) {
         // we do not want the host bot to actually play, so set to null if enabled,
-        // and set to weak ai if disabled
+        // and set to weak AI if disabled
         if (enabled) {
           playersToNodeListing.put(playerName, null);
         } else {
@@ -451,10 +464,6 @@ public class ServerModel extends Observable implements IConnectionChangeListener
     }
   }
 
-  public ChatModel getChatModel() {
-    return chatModel;
-  }
-
   private void disallowRemoveConnections() {
     while (removeConnectionsLatch != null && removeConnectionsLatch.getCount() > 0) {
       removeConnectionsLatch.countDown();
@@ -475,7 +484,7 @@ public class ServerModel extends Observable implements IConnectionChangeListener
     }
 
     final Map<String, PlayerTypes.Type> localPlayerMappings = new HashMap<>();
-    // local player default = humans (for bots = weak ai)
+    // local player default = humans (for bots = weak AI)
     final PlayerTypes.Type defaultLocalType = launchAction.getDefaultLocalPlayerType();
     for (final Map.Entry<String, String> entry : playersToNodeListing.entrySet()) {
       final String player = entry.getKey();
@@ -580,19 +589,6 @@ public class ServerModel extends Observable implements IConnectionChangeListener
         return true;
       }
       return false;
-    }
-
-    /**
-     * This should not be called from within game, only from the game setup screen, while everyone
-     * is waiting for game to start.
-     */
-    @Override
-    public byte[] getSaveGame() {
-      try {
-        return IoUtils.writeToMemory(os -> GameDataManager.saveGame(os, data));
-      } catch (final IOException e) {
-        throw new IllegalStateException(e);
-      }
     }
 
     @Override

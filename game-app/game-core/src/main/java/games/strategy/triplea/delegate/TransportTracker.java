@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 import org.triplea.java.collections.CollectionUtils;
@@ -34,7 +35,7 @@ import org.triplea.java.collections.CollectionUtils;
 public class TransportTracker {
   private static void assertTransport(final Unit u) {
     if (u.getUnitAttachment().getTransportCapacity() == -1) {
-      throw new IllegalStateException("Not a transport:" + u);
+      throw new IllegalStateException("Not a transport: " + u);
     }
   }
 
@@ -98,7 +99,7 @@ public class TransportTracker {
     assertTransport(transport);
     if (!transport.getTransporting().contains(unit)) {
       throw new IllegalStateException(
-          "Not being carried, unit:" + unit + " transport:" + transport);
+          "Not being carried, unit: " + unit + " transport: " + transport);
     }
     final List<Unit> newUnloaded = new ArrayList<>(transport.getUnloaded());
     newUnloaded.add(unit);
@@ -165,7 +166,8 @@ public class TransportTracker {
     change.add(ChangeFactory.unitPropertyChange(unit, transport, Unit.TRANSPORTED_BY));
     final Collection<Unit> newCarrying = new ArrayList<>(transport.getTransporting());
     if (newCarrying.contains(unit)) {
-      throw new IllegalStateException("Already carrying, transport:" + transport + " unt:" + unit);
+      throw new IllegalStateException(
+          "Already carrying, transport: " + transport + " unt: " + unit);
     }
     newCarrying.add(unit);
     change.add(ChangeFactory.unitPropertyChange(unit, Boolean.TRUE, Unit.LOADED_THIS_TURN));
@@ -183,7 +185,7 @@ public class TransportTracker {
     // Check if there are transports available, also check for destroyer capacity (Tokyo Express)
     if (ua.getTransportCapacity() == -1
         || (Properties.getPacificTheater(unit.getData().getProperties())
-            && ua.getIsDestroyer()
+            && ua.isDestroyer()
             && !unit.getOwner().getName().equals(Constants.PLAYER_NAME_JAPANESE))) {
       return 0;
     }
@@ -254,7 +256,7 @@ public class TransportTracker {
    * determine why we can't unload an additional unit. Since transports only hold up to two units,
    * we only need to return one territory, not multiple territories.
    */
-  public static Territory getTerritoryTransportHasUnloadedTo(final Unit transport) {
+  public static @Nullable Territory getTerritoryTransportHasUnloadedTo(final Unit transport) {
     final Collection<Unit> unloaded = transport.getUnloaded();
     if (unloaded.isEmpty()) {
       return null;

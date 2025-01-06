@@ -1,5 +1,6 @@
 package games.strategy.triplea.ai.pro.util;
 
+import com.google.common.base.Preconditions;
 import games.strategy.engine.data.GameData;
 import games.strategy.engine.data.GamePlayer;
 import games.strategy.engine.data.GameState;
@@ -148,7 +149,7 @@ public final class ProSortMoveOptionsUtils {
           final UnitType unitType2 = u2.getType();
 
           // If unit types are equal and are air, then sort by average distance.
-          if (unitType1.equals(unitType2) && unitType1.getUnitAttachment().getIsAir()) {
+          if (unitType1.equals(unitType2) && unitType1.getUnitAttachment().isAir()) {
             final Predicate<Territory> predicate =
                 ProMatches.territoryCanMoveAirUnitsAndNoAa(data, player, true);
             final Territory territory1 = unitTerritoryMap.get(u1);
@@ -202,7 +203,7 @@ public final class ProSortMoveOptionsUtils {
 
     int minPower = Integer.MAX_VALUE;
     for (final Territory t : territories) {
-      final List<Unit> defendingUnits = t.getUnitCollection().getMatches(Matches.enemyUnit(player));
+      final List<Unit> defendingUnits = t.getMatches(Matches.enemyUnit(player));
       final Collection<Unit> attackingUnits = new ArrayList<>(attackMap.get(t).getUnits());
       // Compare the difference in total power when including the unit or not.
       int powerDifference = 0;
@@ -230,10 +231,12 @@ public final class ProSortMoveOptionsUtils {
         minPower = powerDifference;
       }
     }
-
-    if (unit.getUnitAttachment().getIsAir()) {
+    if (unit.getUnitAttachment().isAir()) {
       minPower *= 10;
     }
-    return (double) minPower / proData.getUnitValue(unit.getType());
+    final double unitValue = proData.getUnitValue(unit.getType());
+    final double result = unitValue == 0.0 ? 0.0 : (double) minPower / unitValue;
+    Preconditions.checkState(Double.isFinite(result));
+    return result;
   }
 }

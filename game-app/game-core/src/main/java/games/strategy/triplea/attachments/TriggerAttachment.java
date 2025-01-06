@@ -24,8 +24,8 @@ import games.strategy.engine.data.Unit;
 import games.strategy.engine.data.UnitType;
 import games.strategy.engine.data.changefactory.ChangeFactory;
 import games.strategy.engine.data.gameparser.GameParseException;
-import games.strategy.engine.delegate.IDelegate;
 import games.strategy.engine.delegate.IDelegateBridge;
+import games.strategy.engine.history.IDelegateHistoryWriter;
 import games.strategy.triplea.Constants;
 import games.strategy.triplea.Properties;
 import games.strategy.triplea.delegate.AbstractMoveDelegate;
@@ -58,6 +58,7 @@ import org.triplea.java.ObjectUtils;
 import org.triplea.java.PredicateBuilder;
 import org.triplea.java.collections.CollectionUtils;
 import org.triplea.java.collections.IntegerMap;
+import org.triplea.sound.ISound;
 import org.triplea.sound.SoundPath;
 import org.triplea.util.Tuple;
 
@@ -399,7 +400,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
   private void setFrontier(final String s) throws GameParseException {
     final ProductionFrontier front = getData().getProductionFrontierList().getProductionFrontier(s);
     if (front == null) {
-      throw new GameParseException("Could not find frontier. name:" + s + thisErrorMsg());
+      throw new GameParseException("Could not find frontier. name: " + s + thisErrorMsg());
     }
     frontier = front;
   }
@@ -422,14 +423,15 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
       throw new GameParseException("Invalid productionRule declaration: " + prop + thisErrorMsg());
     }
     if (getData().getProductionFrontierList().getProductionFrontier(s[0]) == null) {
-      throw new GameParseException("Could not find frontier. name:" + s[0] + thisErrorMsg());
+      throw new GameParseException("Could not find frontier. name: " + s[0] + thisErrorMsg());
     }
     String rule = s[1];
     if (rule.startsWith("-")) {
       rule = rule.replaceFirst("-", "");
     }
     if (getData().getProductionRuleList().getProductionRule(rule) == null) {
-      throw new GameParseException("Could not find production rule. name:" + rule + thisErrorMsg());
+      throw new GameParseException(
+          "Could not find production rule. name: " + rule + thisErrorMsg());
     }
     if (productionRule == null) {
       productionRule = new ArrayList<>();
@@ -484,7 +486,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
         ta = getData().getTechnologyFrontier().getAdvanceByName(subString);
       }
       if (ta == null) {
-        throw new GameParseException("Technology not found :" + subString + thisErrorMsg());
+        throw new GameParseException("Technology not found : " + subString + thisErrorMsg());
       }
       if (tech == null) {
         tech = new ArrayList<>();
@@ -524,7 +526,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
         ta = getData().getTechnologyFrontier().getAdvanceByName(s[i]);
       }
       if (ta == null) {
-        throw new GameParseException("Technology not found :" + s[i] + thisErrorMsg());
+        throw new GameParseException("Technology not found : " + s[i] + thisErrorMsg());
       }
       tlist.put(ta, add);
     }
@@ -559,7 +561,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           .orElseThrow(
               () ->
                   new GameParseException(
-                      "Could not find unitSupportAttachment. name:" + name + thisErrorMsg()));
+                      "Could not find unitSupportAttachment. name: " + name + thisErrorMsg()));
       if (support == null) {
         support = new LinkedHashMap<>();
       }
@@ -696,11 +698,11 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           "unitAttachmentName count must be a valid attachment name" + thisErrorMsg());
     }
     if (s[1].equals("UnitAttachment") && !s[0].startsWith(Constants.UNIT_ATTACHMENT_NAME)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     if (s[1].equals("UnitSupportAttachment")
         && !s[0].startsWith(Constants.SUPPORT_ATTACHMENT_PREFIX)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     unitAttachmentName = Tuple.of(s[1].intern(), s[0].intern());
   }
@@ -786,10 +788,10 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
     }
     if (s[1].equals("TerritoryAttachment")
         && !s[0].startsWith(Constants.TERRITORY_ATTACHMENT_NAME)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     if (s[1].equals("CanalAttachment") && !s[0].startsWith(Constants.CANAL_ATTACHMENT_PREFIX)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     territoryAttachmentName = Tuple.of(s[1].intern(), s[0].intern());
   }
@@ -879,27 +881,27 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           "playerAttachmentName count must be a valid attachment name" + thisErrorMsg());
     }
     if (s[1].equals("PlayerAttachment") && !s[0].startsWith(Constants.PLAYER_ATTACHMENT_NAME)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     if (s[1].equals("RulesAttachment")
         && !(s[0].startsWith(Constants.RULES_ATTACHMENT_NAME)
             || s[0].startsWith(Constants.RULES_OBJECTIVE_PREFIX)
             || s[0].startsWith(Constants.RULES_CONDITION_PREFIX))) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     if (s[1].equals("TriggerAttachment") && !s[0].startsWith(Constants.TRIGGER_ATTACHMENT_PREFIX)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     if (s[1].equals("TechAttachment") && !s[0].startsWith(Constants.TECH_ATTACHMENT_NAME)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     if (s[1].equals("PoliticalActionAttachment")
         && !s[0].startsWith(Constants.POLITICALACTION_ATTACHMENT_PREFIX)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     if (s[1].equals("UserActionAttachment")
         && !s[0].startsWith(Constants.USERACTION_ATTACHMENT_PREFIX)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     this.playerAttachmentName = Tuple.of(s[1].intern(), s[0].intern());
   }
@@ -948,7 +950,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           getData().getRelationshipTypeList().getRelationshipType(element);
       if (relation == null) {
         throw new GameParseException(
-            "Could not find relationshipType. name:" + element + thisErrorMsg());
+            "Could not find relationshipType. name: " + element + thisErrorMsg());
       }
       if (relationshipTypes == null) {
         relationshipTypes = new ArrayList<>();
@@ -989,7 +991,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           "relationshipTypeAttachmentName count must be a valid attachment name" + thisErrorMsg());
     }
     if (!s[0].startsWith(Constants.RELATIONSHIPTYPE_ATTACHMENT_NAME)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     relationshipTypeAttachmentName = Tuple.of(s[1].intern(), s[0].intern());
   }
@@ -1038,7 +1040,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
       final TerritoryEffect effect = getData().getTerritoryEffectList().get(name);
       if (effect == null) {
         throw new GameParseException(
-            "Could not find territoryEffect. name:" + name + thisErrorMsg());
+            "Could not find territoryEffect. name: " + name + thisErrorMsg());
       }
       if (territoryEffects == null) {
         territoryEffects = new ArrayList<>();
@@ -1078,7 +1080,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           "territoryEffectAttachmentName count must be a valid attachment name" + thisErrorMsg());
     }
     if (!s[0].startsWith(Constants.TERRITORYEFFECT_ATTACHMENT_NAME)) {
-      throw new GameParseException("attachment incorrectly named:" + s[0] + thisErrorMsg());
+      throw new GameParseException("attachment incorrectly named: " + s[0] + thisErrorMsg());
     }
     territoryEffectAttachmentName = Tuple.of(s[1].intern(), s[0].intern());
   }
@@ -1701,7 +1703,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
             if (attachment == null) {
               // water territories may not have an attachment, so this could be null
               throw new IllegalStateException(
-                  "Triggers: No territory attachment for:" + territory.getName());
+                  "Triggers: No territory attachment for: " + territory.getName());
             }
 
             getPropertyChangeHistoryStartEvent(
@@ -1762,7 +1764,6 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
             getClearFirstNewValue(property.getSecond());
 
         for (final TerritoryEffect territoryEffect : t.getTerritoryEffects()) {
-
           // covers TerritoryEffectAttachment
           if (t.getTerritoryEffectAttachmentName().getFirst().equals("TerritoryEffectAttachment")) {
             final TerritoryEffectAttachment attachment =
@@ -1909,6 +1910,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
       final FireTriggerParams fireTriggerParams) {
     final Collection<TriggerAttachment> trigs =
         filterSatisfiedTriggers(satisfiedTriggers, techAvailableMatch(), fireTriggerParams);
+    IDelegateHistoryWriter historyWriter = bridge.getHistoryWriter();
     for (final TriggerAttachment t : trigs) {
       if (fireTriggerParams.testChance && !t.testChance(bridge)) {
         continue;
@@ -1922,29 +1924,25 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
               player.getTechnologyFrontierList().getTechnologyFrontier(cat);
           if (tf == null) {
             throw new IllegalStateException(
-                "Triggers: tech category doesn't exist:" + cat + " for player:" + player);
+                "Triggers: tech category doesn't exist: " + cat + " for player: " + player);
           }
           for (final TechAdvance ta : t.getAvailableTech().get(cat).keySet()) {
             if (t.getAvailableTech().get(cat).get(ta)) {
-              bridge
-                  .getHistoryWriter()
-                  .startEvent(
-                      MyFormatter.attachmentNameToText(t.getName())
-                          + ": "
-                          + player.getName()
-                          + " gains access to "
-                          + ta);
+              historyWriter.startEvent(
+                  MyFormatter.attachmentNameToText(t.getName())
+                      + ": "
+                      + player.getName()
+                      + " gains access to "
+                      + ta);
               final Change change = ChangeFactory.addAvailableTech(tf, ta, player);
               bridge.addChange(change);
             } else {
-              bridge
-                  .getHistoryWriter()
-                  .startEvent(
-                      MyFormatter.attachmentNameToText(t.getName())
-                          + ": "
-                          + player.getName()
-                          + " loses access to "
-                          + ta);
+              historyWriter.startEvent(
+                  MyFormatter.attachmentNameToText(t.getName())
+                      + ": "
+                      + player.getName()
+                      + " loses access to "
+                      + ta);
               final Change change = ChangeFactory.removeAvailableTech(tf, ta, player);
               bridge.addChange(change);
             }
@@ -1961,6 +1959,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
       final FireTriggerParams fireTriggerParams) {
     final Collection<TriggerAttachment> trigs =
         filterSatisfiedTriggers(satisfiedTriggers, techMatch(), fireTriggerParams);
+    IDelegateHistoryWriter historyWriter = bridge.getHistoryWriter();
     for (final TriggerAttachment t : trigs) {
       if (fireTriggerParams.testChance && !t.testChance(bridge)) {
         continue;
@@ -1973,14 +1972,12 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           if (ta.hasTech(player.getTechAttachment())) {
             continue;
           }
-          bridge
-              .getHistoryWriter()
-              .startEvent(
-                  MyFormatter.attachmentNameToText(t.getName())
-                      + ": "
-                      + player.getName()
-                      + " activates "
-                      + ta);
+          historyWriter.startEvent(
+              MyFormatter.attachmentNameToText(t.getName())
+                  + ": "
+                  + player.getName()
+                  + " activates "
+                  + ta);
           TechTracker.addAdvance(player, bridge, ta);
         }
       }
@@ -2002,16 +1999,15 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
       if (fireTriggerParams.useUses) {
         t.use(bridge);
       }
+      IDelegateHistoryWriter historyWriter = bridge.getHistoryWriter();
       for (final GamePlayer player : t.getPlayers()) {
         change.add(ChangeFactory.changeProductionFrontier(player, t.getFrontier()));
-        bridge
-            .getHistoryWriter()
-            .startEvent(
-                MyFormatter.attachmentNameToText(t.getName())
-                    + ": "
-                    + player.getName()
-                    + " has their production frontier changed to: "
-                    + t.getFrontier().getName());
+        historyWriter.startEvent(
+            MyFormatter.attachmentNameToText(t.getName())
+                + ": "
+                + player.getName()
+                + " has their production frontier changed to: "
+                + t.getFrontier().getName());
       }
     }
     if (!change.isEmpty()) {
@@ -2046,29 +2042,26 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
                 final ProductionRule productionRule =
                     data.getProductionRuleList().getProductionRule(ruleName);
                 final boolean ruleAdded = !rule.startsWith("-");
+                final IDelegateHistoryWriter historyWriter = bridge.getHistoryWriter();
                 if (ruleAdded) {
                   if (!front.getRules().contains(productionRule)) {
                     change.add(ChangeFactory.addProductionRule(productionRule, front));
-                    bridge
-                        .getHistoryWriter()
-                        .startEvent(
-                            MyFormatter.attachmentNameToText(triggerAttachment.getName())
-                                + ": "
-                                + productionRule.getName()
-                                + " added to "
-                                + front.getName());
+                    historyWriter.startEvent(
+                        MyFormatter.attachmentNameToText(triggerAttachment.getName())
+                            + ": "
+                            + productionRule.getName()
+                            + " added to "
+                            + front.getName());
                   }
                 } else {
                   if (front.getRules().contains(productionRule)) {
                     change.add(ChangeFactory.removeProductionRule(productionRule, front));
-                    bridge
-                        .getHistoryWriter()
-                        .startEvent(
-                            MyFormatter.attachmentNameToText(triggerAttachment.getName())
-                                + ": "
-                                + productionRule.getName()
-                                + " removed from "
-                                + front.getName());
+                    historyWriter.startEvent(
+                        MyFormatter.attachmentNameToText(triggerAttachment.getName())
+                            + ": "
+                            + productionRule.getName()
+                            + " removed from "
+                            + front.getName());
                   }
                 }
               });
@@ -2104,7 +2097,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
                   .orElseThrow(
                       () ->
                           new IllegalStateException(
-                              "Could not find unitSupportAttachment. name:" + entry.getKey()));
+                              "Could not find unitSupportAttachment. name: " + entry.getKey()));
           final List<GamePlayer> p = new ArrayList<>(usa.getPlayers());
           final boolean addPlayer = entry.getValue();
           if (p.contains(player) == addPlayer) {
@@ -2160,6 +2153,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
         final GamePlayer oldOwner = data.getPlayerList().getPlayerId(s[1]);
         final GamePlayer newOwner = data.getPlayerList().getPlayerId(s[2]);
         final boolean captured = getBool(s[3]);
+        final IDelegateHistoryWriter historyWriter = bridge.getHistoryWriter();
         for (final Territory terr : territories) {
           final GamePlayer currentOwner = terr.getOwner();
           if (TerritoryAttachment.get(terr) == null) {
@@ -2169,14 +2163,12 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           if (oldOwner != null && !oldOwner.equals(currentOwner)) {
             continue;
           }
-          bridge
-              .getHistoryWriter()
-              .startEvent(
-                  MyFormatter.attachmentNameToText(t.getName())
-                      + ": "
-                      + newOwner.getName()
-                      + (captured ? " captures territory " : " takes ownership of territory ")
-                      + terr.getName());
+          historyWriter.startEvent(
+              MyFormatter.attachmentNameToText(t.getName())
+                  + ": "
+                  + newOwner.getName()
+                  + (captured ? " captures territory " : " takes ownership of territory ")
+                  + terr.getName());
           if (!captured) {
             bridge.addChange(ChangeFactory.changeOwner(terr, newOwner));
           } else {
@@ -2406,13 +2398,12 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
                 testUsesToFire,
                 testChanceToFire,
                 false);
+        IDelegateHistoryWriter historyWriter = bridge.getHistoryWriter();
         for (int i = 0; i < numberOfTimesToFire * eachMultiple; ++i) {
-          bridge
-              .getHistoryWriter()
-              .startEvent(
-                  MyFormatter.attachmentNameToText(t.getName())
-                      + " activates a trigger called: "
-                      + MyFormatter.attachmentNameToText(toFire.getName()));
+          historyWriter.startEvent(
+              MyFormatter.attachmentNameToText(t.getName())
+                  + " activates a trigger called: "
+                  + MyFormatter.attachmentNameToText(toFire.getName()));
           fireTriggers(toFireSet, testedConditionsSoFar, bridge, toFireTriggerParams);
         }
       }
@@ -2461,20 +2452,14 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
       final String sounds = notificationMessages.getSoundsKey(t.getVictory().trim());
       if (victoryMessage != null) {
         if (sounds != null) { // only play the sound if we are also notifying everyone
-          bridge
-              .getSoundChannelBroadcaster()
-              .playSoundToPlayers(
-                  SoundPath.CLIP_TRIGGERED_VICTORY_SOUND + sounds.trim(),
-                  t.getPlayers(),
-                  null,
-                  true);
-          bridge
-              .getSoundChannelBroadcaster()
-              .playSoundToPlayers(
-                  SoundPath.CLIP_TRIGGERED_DEFEAT_SOUND + sounds.trim(),
-                  data.getPlayerList().getPlayers(),
-                  t.getPlayers(),
-                  false);
+          ISound sound = bridge.getSoundChannelBroadcaster();
+          sound.playSoundToPlayers(
+              SoundPath.CLIP_TRIGGERED_VICTORY_SOUND + sounds.trim(), t.getPlayers(), null, true);
+          sound.playSoundToPlayers(
+              SoundPath.CLIP_TRIGGERED_DEFEAT_SOUND + sounds.trim(),
+              data.getPlayerList().getPlayers(),
+              t.getPlayers(),
+              false);
         }
         String messageForRecord = victoryMessage.trim();
         if (messageForRecord.length() > 150) {
@@ -2485,16 +2470,14 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
           }
         }
         try {
-          bridge
-              .getHistoryWriter()
-              .startEvent(
-                  "Players: "
-                      + MyFormatter.defaultNamedToTextList(t.getPlayers())
-                      + " have just won the game, with this victory: "
-                      + messageForRecord);
-          final IDelegate delegateEndRound = data.getDelegate("endRound");
-          ((EndRoundDelegate) delegateEndRound)
-              .signalGameOver(victoryMessage.trim(), t.getPlayers(), bridge);
+          IDelegateHistoryWriter historyWriter = bridge.getHistoryWriter();
+          historyWriter.startEvent(
+              "Players: "
+                  + MyFormatter.defaultNamedToTextList(t.getPlayers())
+                  + " have just won the game, with this victory: "
+                  + messageForRecord);
+          final EndRoundDelegate delegateEndRound = (EndRoundDelegate) data.getDelegate("endRound");
+          delegateEndRound.signalGameOver(victoryMessage.trim(), t.getPlayers(), bridge);
         } catch (final Exception e) {
           log.error("Failed to signal game over", e);
         }
@@ -2575,7 +2558,7 @@ public class TriggerAttachment extends AbstractTriggerAttachment {
   }
 
   @Override
-  public MutableProperty<?> getPropertyOrNull(String propertyName) {
+  public @Nullable MutableProperty<?> getPropertyOrNull(String propertyName) {
     switch (propertyName) {
       case "frontier":
         return MutableProperty.of(

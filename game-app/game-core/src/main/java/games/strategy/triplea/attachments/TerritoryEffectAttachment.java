@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.java.collections.IntegerMap;
 
 /**
@@ -25,8 +26,8 @@ import org.triplea.java.collections.IntegerMap;
  */
 public class TerritoryEffectAttachment extends DefaultAttachment {
 
-  public static final String COMBAT_OFFENSE_EFFECT = "combatOffenseEffect";
-  public static final String COMBAT_DEFENSE_EFFECT = "combatDefenseEffect";
+  @NonNls public static final String COMBAT_OFFENSE_EFFECT = "combatOffenseEffect";
+  @NonNls public static final String COMBAT_DEFENSE_EFFECT = "combatDefenseEffect";
 
   private static final long serialVersionUID = 6379810228136325991L;
 
@@ -206,7 +207,7 @@ public class TerritoryEffectAttachment extends DefaultAttachment {
   public void validate(final GameState data) {}
 
   @Override
-  public MutableProperty<?> getPropertyOrNull(String propertyName) {
+  public @Nullable MutableProperty<?> getPropertyOrNull(String propertyName) {
     switch (propertyName) {
       case COMBAT_DEFENSE_EFFECT:
         return MutableProperty.of(

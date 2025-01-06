@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
@@ -43,6 +44,7 @@ import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.swing.SwingAction;
 import org.triplea.util.PointFileReaderWriter;
 import org.triplea.util.Tuple;
@@ -153,7 +155,7 @@ public final class PlacementPicker {
     private final Image image;
     private final JLabel locationLabel = new JLabel();
     private Map<String, List<Polygon>> polygons = new HashMap<>();
-    private Map<String, Tuple<List<Point>, Boolean>> placements;
+    private Map<String, Tuple<List<Point>, Boolean>> placements = new HashMap<>();
     private List<Point> currentPlacements;
     private boolean currentOverflowToLeft = false;
     private String currentCountry;
@@ -176,9 +178,9 @@ public final class PlacementPicker {
             int width = unitWidth;
             int height = unitHeight;
             boolean found = false;
-            final String scaleProperty = MapData.PROPERTY_UNITS_SCALE + "=";
-            final String widthProperty = MapData.PROPERTY_UNITS_WIDTH + "=";
-            final String heightProperty = MapData.PROPERTY_UNITS_HEIGHT + "=";
+            @NonNls final String scaleProperty = MapData.PROPERTY_UNITS_SCALE + "=";
+            @NonNls final String widthProperty = MapData.PROPERTY_UNITS_WIDTH + "=";
+            @NonNls final String heightProperty = MapData.PROPERTY_UNITS_HEIGHT + "=";
             try (Scanner scanner = new Scanner(file, StandardCharsets.UTF_8.name())) {
               while (scanner.hasNextLine()) {
                 final String line = scanner.nextLine();
@@ -266,7 +268,7 @@ public final class PlacementPicker {
         try {
           final String result = getUnitsScale();
           try {
-            unitZoomPercent = Double.parseDouble(result.toLowerCase());
+            unitZoomPercent = Double.parseDouble(result.toLowerCase(Locale.ROOT));
           } catch (final NumberFormatException ex) {
             // ignore malformed input
           }
@@ -334,13 +336,13 @@ public final class PlacementPicker {
       image = FileHelper.newImage(mapFolder);
       final JPanel imagePanel = newMainPanel();
       /*
-       * Add a mouse listener to show X : Y coordinates on the lower left corner of the screen.
+       * Add a mouse listener to show X : Y coordinates in the lower left corner of the screen.
        */
       imagePanel.addMouseMotionListener(
           new MouseMotionAdapter() {
             @Override
             public void mouseMoved(final MouseEvent e) {
-              locationLabel.setText("x:" + e.getX() + " y:" + e.getY());
+              locationLabel.setText("x: " + e.getX() + " y: " + e.getY());
               currentSquare = new Point(e.getPoint());
               repaint();
             }
@@ -533,7 +535,7 @@ public final class PlacementPicker {
       }
       try {
         PointFileReaderWriter.writeOneToManyPlacements(fileName, placements);
-        log.info("Data written to :" + fileName.normalize().toAbsolutePath());
+        log.info("Data written to: " + fileName.normalize().toAbsolutePath());
       } catch (final IOException e) {
         log.error("Failed to write placements: " + fileName, e);
       }
@@ -567,9 +569,9 @@ public final class PlacementPicker {
      */
     private void mouseEvent(final Point point, final boolean ctrlDown, final boolean rightMouse) {
       if (!rightMouse && !ctrlDown) {
-        currentCountry = ToolsUtil.findTerritoryName(point, polygons, "there be dragons");
+        currentCountry = ToolsUtil.findTerritoryName(point, polygons).orElse("there be dragons");
         // If there isn't an existing array, create one
-        if (placements == null || placements.get(currentCountry) == null) {
+        if (placements.get(currentCountry) == null) {
           currentPlacements = new ArrayList<>();
           currentOverflowToLeft = false;
         } else {
@@ -583,13 +585,9 @@ public final class PlacementPicker {
         }
       } else if (ctrlDown) {
         if (currentPlacements != null) {
-          // If there isn't an existing hashmap, create one
-          if (placements == null) {
-            placements = new HashMap<>();
-          }
           placements.put(currentCountry, Tuple.of(currentPlacements, currentOverflowToLeft));
           currentPlacements = new ArrayList<>();
-          log.info("done:" + currentCountry);
+          log.info("done: " + currentCountry);
         }
       } else {
         if (currentPlacements != null && !currentPlacements.isEmpty()) {

@@ -91,9 +91,9 @@ public class EndTurnDelegate extends AbstractEndTurnDelegate {
           final Collection<UnitType> willBeCreated = createsUnitsMap.keySet();
           for (final UnitType ut : willBeCreated) {
             final UnitAttachment uaToCreate = ut.getUnitAttachment();
-            if (uaToCreate.getIsSea() && !t.isWater()) {
+            if (uaToCreate.isSea() && !t.isWater()) {
               toAddSea.addAll(ut.create(createsUnitsMap.getInt(ut), player));
-            } else if (!uaToCreate.getIsSea() && !uaToCreate.getIsAir() && t.isWater()) {
+            } else if (!uaToCreate.isSea() && !uaToCreate.isAir() && t.isWater()) {
               toAddLand.addAll(ut.create(createsUnitsMap.getInt(ut), player));
             } else {
               toAdd.addAll(ut.create(createsUnitsMap.getInt(ut), player));
@@ -424,7 +424,7 @@ public class EndTurnDelegate extends AbstractEndTurnDelegate {
     for (final Territory current : territories) {
       final TerritoryAttachment attachment = TerritoryAttachment.get(current);
       if (attachment == null) {
-        throw new IllegalStateException("No attachment for owned territory:" + current.getName());
+        throw new IllegalStateException("No attachment for owned territory: " + current.getName());
       }
       final ResourceCollection toAdd = attachment.getResources();
       if (toAdd == null) {
