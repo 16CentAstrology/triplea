@@ -23,6 +23,7 @@ public class Die implements Serializable {
 
   /** The value of the dice, 0 based. */
   private final int value;
+
   /** This value is 1 based. */
   private final int rolledAt;
 
@@ -53,8 +54,8 @@ public class Die implements Serializable {
   @Override
   public String toString() {
     if (rolledAt < 0) {
-      return "Die roll:" + value + (type == DieType.IGNORED ? " type:" + type : "");
+      return "Die roll: " + value + (type == DieType.IGNORED ? " type: " + type : "");
     }
-    return "Die roll:" + value + " rolled at:" + rolledAt + " type:" + type;
+    return "Die roll: " + value + " rolled at: " + rolledAt + " type: " + type;
   }
 }

@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import lombok.Getter;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.java.collections.CollectionUtils;
 import org.triplea.java.collections.IntegerMap;
 
@@ -35,8 +37,8 @@ import org.triplea.java.collections.IntegerMap;
  */
 public class TechAbilityAttachment extends DefaultAttachment {
   // unitAbilitiesGained Static Strings
-  public static final String ABILITY_CAN_BLITZ = "canBlitz";
-  public static final String ABILITY_CAN_BOMBARD = "canBombard";
+  @NonNls public static final String ABILITY_CAN_BLITZ = "canBlitz";
+  @NonNls public static final String ABILITY_CAN_BOMBARD = "canBombard";
 
   private static final long serialVersionUID = 1866305599625384294L;
 
@@ -49,15 +51,15 @@ public class TechAbilityAttachment extends DefaultAttachment {
   private @Nullable IntegerMap<UnitType> airDefenseBonus = null;
   private @Nullable IntegerMap<UnitType> productionBonus = null;
   // -1 means not set
-  private int minimumTerritoryValueForProductionBonus = -1;
+  @Getter private int minimumTerritoryValueForProductionBonus = -1;
   // -1 means not set
   private int repairDiscount = -1;
   // -1 means not set
   private int warBondDiceSides = -1;
   private int warBondDiceNumber = 0;
   private @Nullable IntegerMap<UnitType> rocketDiceNumber = null;
-  private int rocketDistance = 0;
-  private int rocketNumberPerTerritory = 1;
+  @Getter private int rocketDistance = 0;
+  @Getter private int rocketNumberPerTerritory = 1;
   private @Nullable Map<UnitType, Set<String>> unitAbilitiesGained = null;
   private boolean airborneForces = false;
   private @Nullable IntegerMap<UnitType> airborneCapacity = null;
@@ -79,7 +81,7 @@ public class TechAbilityAttachment extends DefaultAttachment {
     if (type instanceof GenericTechAdvance) {
       // generic techs can name a hardcoded tech, therefore if it exists we should use the hard
       // coded tech's attachment.
-      // (if the map maker doesn't want to use the hardcoded tech's attachment, they should not name
+      // (if the mapmaker doesn't want to use the hardcoded tech's attachment, they should not name
       // a hardcoded tech)
       final TechAdvance hardCodedAdvance = ((GenericTechAdvance) type).getAdvance();
       if (hardCodedAdvance != null) {
@@ -266,10 +268,6 @@ public class TechAbilityAttachment extends DefaultAttachment {
     minimumTerritoryValueForProductionBonus = value;
   }
 
-  public int getMinimumTerritoryValueForProductionBonus() {
-    return minimumTerritoryValueForProductionBonus;
-  }
-
   private void resetMinimumTerritoryValueForProductionBonus() {
     minimumTerritoryValueForProductionBonus = -1;
   }
@@ -385,10 +383,6 @@ public class TechAbilityAttachment extends DefaultAttachment {
     rocketDistance = value;
   }
 
-  public int getRocketDistance() {
-    return rocketDistance;
-  }
-
   private void resetRocketDistance() {
     rocketDistance = 0;
   }
@@ -399,10 +393,6 @@ public class TechAbilityAttachment extends DefaultAttachment {
 
   private void setRocketNumberPerTerritory(final Integer value) {
     rocketNumberPerTerritory = value;
-  }
-
-  public int getRocketNumberPerTerritory() {
-    return rocketNumberPerTerritory;
   }
 
   private void resetRocketNumberPerTerritory() {
@@ -886,7 +876,7 @@ public class TechAbilityAttachment extends DefaultAttachment {
   }
 
   @Override
-  public MutableProperty<?> getPropertyOrNull(String propertyName) {
+  public @Nullable MutableProperty<?> getPropertyOrNull(String propertyName) {
     switch (propertyName) {
       case "attackBonus":
         return MutableProperty.of(

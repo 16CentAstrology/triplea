@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.Singular;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.io.FileUtils;
 
 /**
@@ -41,7 +42,7 @@ import org.triplea.io.FileUtils;
 @EqualsAndHashCode
 public class MapDescriptionYaml {
 
-  public static final String MAP_YAML_FILE_NAME = "map.yml";
+  @NonNls public static final String MAP_YAML_FILE_NAME = "map.yml";
 
   private static final int MAX_GAME_NAME_LENGTH = 70;
   private static final int MAX_MAP_NAME_LENGTH = 70;
@@ -77,6 +78,7 @@ public class MapDescriptionYaml {
   @EqualsAndHashCode
   public static class MapGame {
     private final String gameName;
+
     /** Path of the XML file relative to the location of map.yml file. */
     private final String xmlFileName;
   }
@@ -144,7 +146,10 @@ public class MapDescriptionYaml {
     }
 
     if (!validationErrors.isEmpty()) {
-      log.warn("Error found in: {}, errors: {}", sourceFile.toAbsolutePath(), validationErrors);
+      log.info(
+          "Warning: invalid map found installed: {}, errors: {}",
+          sourceFile.toAbsolutePath(),
+          validationErrors);
     }
 
     return validationErrors.isEmpty();

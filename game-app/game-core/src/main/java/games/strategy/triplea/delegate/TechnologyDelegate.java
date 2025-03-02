@@ -137,7 +137,7 @@ public class TechnologyDelegate extends BaseTripleADelegate implements ITechDele
         return false;
       }
       final Collection<GamePlayer> helpPay = pa.getHelpPayTechCost();
-      if (helpPay == null || helpPay.isEmpty()) {
+      if (helpPay.isEmpty()) {
         return false;
       }
       for (final GamePlayer p : helpPay) {
@@ -402,7 +402,7 @@ public class TechnologyDelegate extends BaseTripleADelegate implements ITechDele
     }
     bridge
         .getHistoryWriter()
-        .startEvent("Rolls to resolve tech hits:" + MyFormatter.asDice(random));
+        .startEvent("Rolls to resolve tech hits: " + MyFormatter.asDice(random));
     return ImmutableList.copyOf(newAdvances);
   }
 

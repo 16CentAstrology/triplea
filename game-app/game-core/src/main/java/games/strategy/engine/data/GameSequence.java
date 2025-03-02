@@ -14,16 +14,16 @@ public class GameSequence extends GameDataComponent implements Iterable<GameStep
   @Getter private final List<GameStep> steps = new ArrayList<>();
   private int currentIndex;
   private int round = 1;
-  private int roundOffset = 0;
+  @Getter private int roundOffset = 0;
 
   public GameSequence(final GameData data) {
     super(data);
   }
 
   /**
-   * Only used when we are trying to export the data to a savegame, and we need to change the round
-   * and step to something other than the current round and step (because we are creating a savegame
-   * at a certain point in history, for example).
+   * Only used when we are trying to export the data to a save game, and we need to change the round
+   * and step to something other than the current round and step (because we are creating a save
+   * game at a certain point in history, for example).
    */
   public synchronized void setRoundAndStep(
       final int currentRound, final String stepDisplayName, final GamePlayer player) {
@@ -56,10 +56,6 @@ public class GameSequence extends GameDataComponent implements Iterable<GameStep
 
   public int getRound() {
     return round + roundOffset;
-  }
-
-  public int getRoundOffset() {
-    return roundOffset;
   }
 
   public void setRoundOffset(final int roundOffset) {

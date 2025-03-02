@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import lombok.Getter;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.java.Interruptibles;
 import org.triplea.java.RemoveOnNextMajorRelease;
 import org.triplea.util.Tuple;
@@ -31,15 +33,15 @@ import org.triplea.util.Tuple;
 @RemoveOnNextMajorRelease
 public abstract class AbstractTriggerAttachment extends AbstractConditionsAttachment {
   public static final String NOTIFICATION = "Notification";
-  public static final String AFTER = "after";
-  public static final String BEFORE = "before";
+  public static final @NonNls String AFTER = "after";
+  public static final @NonNls String BEFORE = "before";
   public static final Predicate<TriggerAttachment> availableUses = t -> t.getUses() != 0;
   private static final long serialVersionUID = 5866039180681962697L;
 
   // "setTrigger" is also a valid setter, and it just calls "setConditions" in
   // AbstractConditionsAttachment. Kept for
   // backwards compatibility.
-  private int uses = -1;
+  @Getter private int uses = -1;
   private boolean usedThisRound = false;
   private @Nullable String notification = null;
   private @Nullable List<Tuple<String, String>> when = null;
@@ -115,10 +117,6 @@ public abstract class AbstractTriggerAttachment extends AbstractConditionsAttach
     usedThisRound = false;
   }
 
-  public int getUses() {
-    return uses;
-  }
-
   private void setWhen(final String when) throws GameParseException {
     final String[] s = splitOnColon(when);
     if (s.length != 2) {
@@ -183,7 +181,8 @@ public abstract class AbstractTriggerAttachment extends AbstractConditionsAttach
       return false;
     }
     // there is an issue with maps using thousands of chance triggers: they are causing the cypted
-    // random source (ie: live and pbem games) to lock up or error out so we need to slow them down
+    // random source (i.e. live and pbem games) to lock up or error out, so we need to slow them
+    // down
     // a bit, until we come up with a better solution (like aggregating all the chances together,
     // then getting a ton of random numbers at once instead of one at a time)
     if (PbemMessagePoster.gameDataHasPlayByEmailOrForumMessengers(getData())) {
@@ -231,7 +230,7 @@ public abstract class AbstractTriggerAttachment extends AbstractConditionsAttach
    *     args, otherwise false
    */
   public static Predicate<TriggerAttachment> whenOrDefaultMatch(
-      final String beforeOrAfter, final String stepName) {
+      final @NonNls String beforeOrAfter, final @NonNls String stepName) {
     return t -> {
       if (beforeOrAfter == null && stepName == null && t.getWhen().isEmpty()) {
         return true;
@@ -278,7 +277,7 @@ public abstract class AbstractTriggerAttachment extends AbstractConditionsAttach
   public void validate(final GameState data) {}
 
   @Override
-  public MutableProperty<?> getPropertyOrNull(String propertyName) {
+  public @Nullable MutableProperty<?> getPropertyOrNull(String propertyName) {
     switch (propertyName) {
       case "uses":
         return MutableProperty.ofMapper(

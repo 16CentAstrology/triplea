@@ -1,5 +1,7 @@
 package games.strategy.engine.data.gameparser;
 
+import static games.strategy.engine.framework.startup.ui.PlayerTypes.PLAYER_TYPE_HUMAN_LABEL;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -41,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -49,6 +52,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.config.product.ProductVersionReader;
 import org.triplea.generic.xml.reader.XmlMapper;
 import org.triplea.generic.xml.reader.exceptions.XmlParsingException;
@@ -75,22 +79,25 @@ import org.triplea.util.Version;
 /** Parses a game XML file into a {@link GameData} domain object. */
 @Slf4j
 public final class GameParser {
-  private static final String RESOURCE_IS_DISPLAY_FOR_NONE = "NONE";
+  @NonNls private static final String RESOURCE_IS_DISPLAY_FOR_NONE = "NONE";
 
   @Nonnull private final GameData data;
   private final Path xmlUri;
   private final XmlGameElementMapper xmlGameElementMapper;
   private GameDataVariables variables;
   private final Version engineVersion;
+  private final boolean collectAttachmentOrderAndValues;
 
   private GameParser(
       final Path xmlUri,
       final XmlGameElementMapper xmlGameElementMapper,
-      final Version engineVersion) {
+      final Version engineVersion,
+      final boolean collectAttachmentOrderAndValues) {
     data = new GameData();
     this.xmlUri = xmlUri;
     this.xmlGameElementMapper = xmlGameElementMapper;
     this.engineVersion = engineVersion;
+    this.collectAttachmentOrderAndValues = collectAttachmentOrderAndValues;
   }
 
   /**
@@ -98,25 +105,29 @@ public final class GameParser {
    *
    * @param xmlFile The game XML file to be parsed.
    * @return A complete {@link GameData} instance that can be used to play the game, otherwise
-   *     returns empty if the file could not parsed or is not valid.
+   *     returns empty if the file could not be parsed or is not valid.
    */
-  public static Optional<GameData> parse(final Path xmlFile) {
+  public static Optional<GameData> parse(
+      final Path xmlFile, boolean collectAttachmentOrderAndValues) {
     log.debug("Parsing game XML: {}", xmlFile.toAbsolutePath());
     final Optional<GameData> gameData =
         GameParser.parse(
-            xmlFile, new XmlGameElementMapper(), ProductVersionReader.getCurrentVersion());
+            xmlFile,
+            new XmlGameElementMapper(),
+            ProductVersionReader.getCurrentVersion(),
+            collectAttachmentOrderAndValues);
 
     // if parsed, find the 'map.yml' from a parent folder and set the 'mapName' property
     // using the 'map name' from 'map.yml'
-    if (gameData.isPresent()) {
-      FileUtils.findFileInParentFolders(xmlFile, MapDescriptionYaml.MAP_YAML_FILE_NAME)
-          .flatMap(MapDescriptionYaml::fromFile)
-          .ifPresent(
-              mapDescriptionYaml -> {
-                gameData.get().setGameName(mapDescriptionYaml.findGameNameFromXmlFileName(xmlFile));
-                gameData.get().setMapName(mapDescriptionYaml.getMapName());
-              });
-    }
+    gameData.ifPresent(
+        data ->
+            FileUtils.findFileInParentFolders(xmlFile, MapDescriptionYaml.MAP_YAML_FILE_NAME)
+                .flatMap(MapDescriptionYaml::fromFile)
+                .ifPresent(
+                    mapDescriptionYaml -> {
+                      data.setGameName(mapDescriptionYaml.findGameNameFromXmlFileName(xmlFile));
+                      data.setMapName(mapDescriptionYaml.getMapName());
+                    }));
 
     return gameData;
   }
@@ -125,12 +136,14 @@ public final class GameParser {
   public static Optional<GameData> parse(
       final Path xmlFile,
       final XmlGameElementMapper xmlGameElementMapper,
-      final Version engineVersion) {
+      final Version engineVersion,
+      final boolean collectAttachmentOrderAndValues) {
     return UrlStreams.openStream(
         xmlFile.toUri(),
         inputStream -> {
           try {
-            return new GameParser(xmlFile, xmlGameElementMapper, engineVersion)
+            return new GameParser(
+                    xmlFile, xmlGameElementMapper, engineVersion, collectAttachmentOrderAndValues)
                 .parse(xmlFile, inputStream);
           } catch (final EngineVersionException e) {
             log.warn("Game engine not compatible with: " + xmlFile, e);
@@ -265,13 +278,13 @@ public final class GameParser {
         .orElseThrow(() -> new GameParseException("Could not find territoryEffect:" + name));
   }
 
-  /** If cannot find the productionRule an exception will be thrown. */
+  /** If the productionRule cannot be found an exception will be thrown. */
   private ProductionRule getProductionRule(final String name) throws GameParseException {
     return Optional.ofNullable(data.getProductionRuleList().getProductionRule(name))
         .orElseThrow(() -> new GameParseException("Could not find production rule:" + name));
   }
 
-  /** If cannot find the repairRule an exception will be thrown. */
+  /** If the repairRule cannot be found an exception will be thrown. */
   private RepairRule getRepairRule(final String name) throws GameParseException {
     return Optional.ofNullable(data.getRepairRules().getRepairRule(name))
         .orElseThrow(() -> new GameParseException("Could not find repair rule:" + name));
@@ -299,7 +312,7 @@ public final class GameParser {
         .orElseThrow(() -> new GameParseException("Could not find technology:" + name));
   }
 
-  /** If cannot find the Delegate an exception will be thrown. */
+  /** If the Delegate cannot be found an exception will be thrown. */
   private IDelegate getDelegate(final String name) throws GameParseException {
     return Optional.ofNullable(data.getDelegate(name))
         .orElseThrow(() -> new GameParseException("Could not find delegate:" + name));
@@ -315,13 +328,13 @@ public final class GameParser {
     return Optional.ofNullable(data.getResourceList().getResource(name));
   }
 
-  /** If cannot find the productionRule an exception will be thrown. */
+  /** If the productionFrontier cannot be found an exception will be thrown. */
   private ProductionFrontier getProductionFrontier(final String name) throws GameParseException {
     return Optional.ofNullable(data.getProductionFrontierList().getProductionFrontier(name))
         .orElseThrow(() -> new GameParseException("Could not find production frontier:" + name));
   }
 
-  /** If cannot find the repairFrontier an exception will be thrown. */
+  /** If the repairFrontier cannot be found an exception will be thrown. */
   private RepairFrontier getRepairFrontier(final String name) throws GameParseException {
     return Optional.ofNullable(data.getRepairFrontierList().getRepairFrontier(name))
         .orElseThrow(() -> new GameParseException("Could not find repair frontier:" + name));
@@ -408,7 +421,8 @@ public final class GameParser {
                             current.getName(),
                             Optional.ofNullable(current.getOptional()).orElse(false),
                             Optional.ofNullable(current.getCanBeDisabled()).orElse(false),
-                            Optional.ofNullable(current.getDefaultType()).orElse("Human"),
+                            Optional.ofNullable(current.getDefaultType())
+                                .orElse(PLAYER_TYPE_HUMAN_LABEL),
                             Optional.ofNullable(current.getIsHidden()).orElse(false),
                             data)));
   }
@@ -839,7 +853,9 @@ public final class GameParser {
     final List<Tuple<String, String>> attachmentOptionValues =
         setOptions(attachment, current.getOptions(), foreach);
     // keep a list of attachment references in the order they were added
-    data.addToAttachmentOrderAndValues(Tuple.of(attachment, attachmentOptionValues));
+    if (collectAttachmentOrderAndValues) {
+      data.addToAttachmentOrderAndValues(Tuple.of(attachment, attachmentOptionValues));
+    }
   }
 
   private Attachable findAttachment(
@@ -889,6 +905,7 @@ public final class GameParser {
         continue;
       }
       final String count = option.getCount();
+      @NonNls
       final String countAndValue = Strings.isNullOrEmpty(count) ? value : (count + ":" + value);
       if (containsEmptyForeachVariable(countAndValue, foreach)) {
         continue; // Skip adding option if contains empty foreach variable
@@ -932,7 +949,7 @@ public final class GameParser {
 
   @VisibleForTesting
   static String decapitalize(final String value) {
-    return ((value.length() > 0) ? value.substring(0, 1).toLowerCase() : "")
+    return ((!value.isEmpty()) ? value.substring(0, 1).toLowerCase(Locale.ROOT) : "")
         + ((value.length() > 1) ? value.substring(1) : "");
   }
 

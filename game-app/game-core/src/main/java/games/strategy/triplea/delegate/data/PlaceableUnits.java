@@ -5,13 +5,16 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
+import lombok.Getter;
 
 /** The result of validating a unit placement action. */
 public class PlaceableUnits implements Serializable {
   private static final long serialVersionUID = 6572719978603199091L;
   @Nullable private final String errorMessage;
-  private final Collection<Unit> units;
-  private final int maxUnits;
+  @Getter private final Collection<Unit> units;
+
+  /** -- GETTER -- Returns the maximum number of units that can be placed or -1 if no limit. */
+  @Getter private final int maxUnits;
 
   public PlaceableUnits(final String errorMessage) {
     this.errorMessage = errorMessage;
@@ -29,15 +32,6 @@ public class PlaceableUnits implements Serializable {
     this(null);
   }
 
-  public Collection<Unit> getUnits() {
-    return units;
-  }
-
-  /** Returns the maximum number of units that can be placed or -1 if no limit. */
-  public int getMaxUnits() {
-    return maxUnits;
-  }
-
   @Nullable
   public String getErrorMessage() {
     return errorMessage;
@@ -49,6 +43,6 @@ public class PlaceableUnits implements Serializable {
 
   @Override
   public String toString() {
-    return "ProductionResponseMessage units:" + units;
+    return "ProductionResponseMessage units: " + units;
   }
 }

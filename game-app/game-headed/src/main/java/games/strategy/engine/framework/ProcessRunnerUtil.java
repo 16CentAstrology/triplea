@@ -6,30 +6,36 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NonNls;
 
 /** To hold various static utility methods for running a java program. */
 @Slf4j
-final class ProcessRunnerUtil {
-  private ProcessRunnerUtil() {}
+@UtilityClass
+class ProcessRunnerUtil {
 
-  static void populateBasicJavaArgs(final List<String> commands) {
-    final String javaCommand = Path.of(SystemProperties.getJavaHome(), "bin", "java").toString();
+  public static List<String> createBasicJavaArgs() {
+    @NonNls List<String> commands = new ArrayList<>();
+
+    String javaCommand = Path.of(SystemProperties.getJavaHome(), "bin", "java").toString();
     commands.add(javaCommand);
     commands.add("-classpath");
     commands.add(SystemProperties.getJavaClassPath());
 
-    final Optional<String> maxMemory =
+    Optional<String> maxMemory =
         ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
-            .filter(s -> s.toLowerCase().startsWith("-xmx"))
+            .filter(s -> s.toLowerCase(Locale.ROOT).startsWith("-xmx"))
             .map(s -> s.substring(4))
             .findFirst();
     maxMemory.ifPresent(max -> commands.add("-Xmx" + max));
-    final Optional<String> maxStackSize =
+    Optional<String> maxStackSize =
         ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
-            .filter(s -> s.toLowerCase().startsWith("-xss"))
+            .filter(s -> s.toLowerCase(Locale.ROOT).startsWith("-xss"))
             .findFirst();
     maxStackSize.ifPresent(commands::add);
     if (SystemProperties.isMac()) {
@@ -40,6 +46,7 @@ final class ProcessRunnerUtil {
         commands.add("-Xdock:icon=" + icons.toAbsolutePath());
       }
     }
+    return commands;
   }
 
   static void exec(final List<String> commands) {

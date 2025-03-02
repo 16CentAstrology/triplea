@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.triplea.java.ThreadRunner;
 
@@ -126,7 +127,7 @@ class NioWriter {
     synchronized (mutex) {
       final List<SocketWriteData> values = writing.get(to);
       if (values == null) {
-        log.error("NO socket data to:" + to);
+        log.error("NO socket data to: " + to);
         return;
       }
       values.remove(0);
@@ -137,7 +138,7 @@ class NioWriter {
     }
   }
 
-  private SocketWriteData getData(final SocketChannel to) {
+  private @Nullable SocketWriteData getData(final SocketChannel to) {
     synchronized (mutex) {
       if (!writing.containsKey(to)) {
         return null;

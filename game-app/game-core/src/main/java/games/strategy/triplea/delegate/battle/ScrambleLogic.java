@@ -30,7 +30,7 @@ public class ScrambleLogic {
   private final GameState data;
   private final GamePlayer player;
   private final Set<Territory> territoriesWithBattles;
-  private BattleTracker battleTracker;
+  private final BattleTracker battleTracker;
   @Getter private final Predicate<Unit> airbaseThatCanScramblePredicate;
   private final Predicate<Territory> canScrambleFromPredicate;
   private final int maxScrambleDistance;
@@ -80,7 +80,7 @@ public class ScrambleLogic {
     int maxScrambleDistance = 0;
     for (final UnitType unitType : data.getUnitTypeList()) {
       final UnitAttachment ua = unitType.getUnitAttachment();
-      if (ua.getCanScramble() && maxScrambleDistance < ua.getMaxScrambleDistance()) {
+      if (ua.canScramble() && maxScrambleDistance < ua.getMaxScrambleDistance()) {
         maxScrambleDistance = ua.getMaxScrambleDistance();
       }
     }

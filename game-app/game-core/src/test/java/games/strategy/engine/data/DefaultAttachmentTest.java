@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import javax.annotation.Nullable;
+import org.jetbrains.annotations.NonNls;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +20,8 @@ final class DefaultAttachmentTest {
   @ExtendWith(MockitoExtension.class)
   @Nested
   final class EqualsTest {
-    private static final String NAME = "attachment";
-    private static final String OTHER_NAME = "otherAttachment";
+    @NonNls private static final String NAME = "attachment";
+    @NonNls private static final String OTHER_NAME = "otherAttachment";
 
     @Mock private Attachable attachable;
     @Mock private Attachable otherAttachable;
@@ -44,7 +46,7 @@ final class DefaultAttachmentTest {
       public void validate(final GameState data) {}
 
       @Override
-      public MutableProperty<?> getPropertyOrNull(String propertyName) {
+      public @Nullable MutableProperty<?> getPropertyOrNull(String propertyName) {
         return null;
       }
 

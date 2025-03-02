@@ -231,7 +231,6 @@ public abstract class AbstractEndTurnDelegate extends BaseTripleADelegate
     }
     if (Properties.getGiveUnitsByTerritory(getData().getProperties())
         && pa != null
-        && pa.getGiveUnitControl() != null
         && !pa.getGiveUnitControl().isEmpty()) {
       changeUnitOwnership(bridge);
     }
@@ -414,11 +413,8 @@ public abstract class AbstractEndTurnDelegate extends BaseTripleADelegate
         newOwners.retainAll(possibleNewOwners);
         for (final GamePlayer newOwner : newOwners) {
           final Collection<Unit> units =
-              currTerritory
-                  .getUnitCollection()
-                  .getMatches(
-                      Matches.unitIsOwnedBy(player)
-                          .and(Matches.unitCanBeGivenByTerritoryTo(newOwner)));
+              currTerritory.getMatches(
+                  Matches.unitIsOwnedBy(player).and(Matches.unitCanBeGivenByTerritoryTo(newOwner)));
           if (!units.isEmpty()) {
             change.add(ChangeFactory.changeOwner(units, newOwner, currTerritory));
             changeList.add(Tuple.of(currTerritory, units));
@@ -468,7 +464,7 @@ public abstract class AbstractEndTurnDelegate extends BaseTripleADelegate
     for (final Territory current : territories) {
       final TerritoryAttachment attachment = TerritoryAttachment.get(current);
       if (attachment == null) {
-        throw new IllegalStateException("No attachment for owned territory:" + current.getName());
+        throw new IllegalStateException("No attachment for owned territory: " + current.getName());
       }
       // Match will Check if territory is originally owned convoy center, or if it is contested
       if (Matches.territoryCanCollectIncomeFrom(current.getOwner()).test(current)) {

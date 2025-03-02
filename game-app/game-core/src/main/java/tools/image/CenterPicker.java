@@ -160,7 +160,7 @@ public final class CenterPicker {
           new MouseMotionAdapter() {
             @Override
             public void mouseMoved(final MouseEvent e) {
-              locationLabel.setText("x:" + e.getX() + " y:" + e.getY());
+              locationLabel.setText("x: " + e.getX() + " y: " + e.getY());
             }
           });
       // Add a mouse listener to monitor for right mouse button being clicked.
@@ -237,7 +237,7 @@ public final class CenterPicker {
       }
       try {
         PointFileReaderWriter.writeOneToOne(fileName, centers);
-        log.info("Data written to :" + fileName.normalize().toAbsolutePath());
+        log.info("Data written to: " + fileName.normalize().toAbsolutePath());
       } catch (final IOException e) {
         log.error("Failed to save centers: " + fileName, e);
       }
@@ -265,7 +265,7 @@ public final class CenterPicker {
      * @param p A point on the map.
      */
     private String findTerritoryName(final Point p) {
-      return ToolsUtil.findTerritoryName(p, polygons, "unknown");
+      return ToolsUtil.findTerritoryName(p, polygons).orElse("unknown");
     }
 
     private void mouseEvent(final Point point, final boolean rightMouse) {

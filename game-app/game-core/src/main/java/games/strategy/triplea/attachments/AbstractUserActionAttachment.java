@@ -13,6 +13,8 @@ import games.strategy.triplea.Constants;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import lombok.Getter;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.java.collections.IntegerMap;
 
 /**
@@ -21,12 +23,17 @@ import org.triplea.java.collections.IntegerMap;
  * serialization size.
  */
 public abstract class AbstractUserActionAttachment extends AbstractConditionsAttachment {
-  public static final String ATTEMPTS_LEFT_THIS_TURN = "attemptsLeftThisTurn";
+  @NonNls public static final String ATTEMPTS_LEFT_THIS_TURN = "attemptsLeftThisTurn";
   private static final long serialVersionUID = 3569461523853104614L;
 
+  /**
+   * -- GETTER -- Returns the Key that is used in politicstext.properties or other .properties for
+   * all the texts.
+   */
   // a key referring to politicaltexts.properties or other .properties for all the UI messages
   // belonging to this action.
-  protected String text = "";
+  @Getter protected String text = "";
+
   /**
    * The cost in PUs to attempt this action.
    *
@@ -34,6 +41,7 @@ public abstract class AbstractUserActionAttachment extends AbstractConditionsAtt
    *     possibly old map downloads that still have this value.
    */
   @Deprecated protected int costPu = 0;
+
   // cost in any resources to attempt this action
   protected @Nullable IntegerMap<Resource> costResources = null;
   // how many times can you perform this action each round?
@@ -59,13 +67,6 @@ public abstract class AbstractUserActionAttachment extends AbstractConditionsAtt
 
   private void setText(final String text) {
     this.text = text.intern();
-  }
-
-  /**
-   * Returns the Key that is used in politicstext.properties or other .properties for all the texts.
-   */
-  public String getText() {
-    return text;
   }
 
   private void resetText() {
@@ -209,7 +210,7 @@ public abstract class AbstractUserActionAttachment extends AbstractConditionsAtt
   }
 
   @Override
-  public MutableProperty<?> getPropertyOrNull(String propertyName) {
+  public @Nullable MutableProperty<?> getPropertyOrNull(String propertyName) {
     switch (propertyName) {
       case "text":
         return MutableProperty.ofString(this::setText, this::getText, this::resetText);
