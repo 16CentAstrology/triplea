@@ -187,7 +187,7 @@ public class InitializationDelegate extends BaseTripleADelegate {
       }
       final Predicate<Unit> owned = Matches.unitIsOwnedBy(player);
       for (final Territory t : data.getMap().getTerritories()) {
-        final Collection<Unit> terrUnits = t.getUnitCollection().getMatches(owned);
+        final Collection<Unit> terrUnits = t.getMatches(owned);
         if (!terrUnits.isEmpty()) {
           change.add(ChangeFactory.removeUnits(t, terrUnits));
         }
@@ -293,7 +293,7 @@ public class InitializationDelegate extends BaseTripleADelegate {
           continue;
         }
         final UnitType unit = data.getUnitTypeList().getUnitType(named.getName());
-        final boolean isSea = unit.getUnitAttachment().getIsSea();
+        final boolean isSea = unit.getUnitAttachment().isSea();
         if (!isSea) {
           final ProductionRule prodRule =
               data.getProductionRuleList().getProductionRule(rule.getName());
@@ -316,7 +316,7 @@ public class InitializationDelegate extends BaseTripleADelegate {
     final UnitAttachment battleShipAttachment = battleShipUnit.getUnitAttachment();
     final boolean defaultEnabled = battleShipAttachment.getHitPoints() > 1;
     if (userEnabled != defaultEnabled) {
-      bridge.getHistoryWriter().startEvent("TwoHitBattleships:" + userEnabled);
+      bridge.getHistoryWriter().startEvent("TwoHitBattleships: " + userEnabled);
       bridge.addChange(
           ChangeFactory.attachmentPropertyChange(
               battleShipAttachment, userEnabled ? 2 : 1, "hitPoints"));
@@ -332,11 +332,11 @@ public class InitializationDelegate extends BaseTripleADelegate {
         if (territoryAttachment == null) {
           throw new IllegalStateException("No territory attachment for " + current);
         }
-        if (territoryAttachment.getOriginalOwner() == null && current.getOwner() != null) {
+        if (territoryAttachment.getOriginalOwner() == null) {
           changes.add(OriginalOwnerTracker.addOriginalOwnerChange(current, current.getOwner()));
         }
         final Collection<Unit> factoryAndInfrastructure =
-            current.getUnitCollection().getMatches(Matches.unitIsInfrastructure());
+            current.getMatches(Matches.unitIsInfrastructure());
         changes.add(
             OriginalOwnerTracker.addOriginalOwnerChange(
                 factoryAndInfrastructure, current.getOwner()));

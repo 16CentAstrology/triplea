@@ -7,13 +7,14 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import lombok.Getter;
 
 /** A collection of {@link TechAdvance}s available to a single player. */
 public class TechnologyFrontier extends GameDataComponent implements Iterable<TechAdvance> {
   private static final long serialVersionUID = -5245743727479551766L;
 
   private final List<TechAdvance> techs = new ArrayList<>();
-  private final String name;
+  @Getter private final String name;
 
   public TechnologyFrontier(final String name, final GameData data) {
     super(data);
@@ -49,7 +50,7 @@ public class TechnologyFrontier extends GameDataComponent implements Iterable<Te
 
   public void removeAdvance(final TechAdvance t) {
     if (!techs.contains(t)) {
-      throw new IllegalStateException("Advance not present:" + t);
+      throw new IllegalStateException("Advance not present: " + t);
     }
     techs.remove(t);
     getData().getTechTracker().clearCache();
@@ -70,10 +71,6 @@ public class TechnologyFrontier extends GameDataComponent implements Iterable<Te
   @Override
   public final Iterator<TechAdvance> iterator() {
     return getTechs().iterator();
-  }
-
-  public String getName() {
-    return name;
   }
 
   public boolean isEmpty() {

@@ -50,7 +50,7 @@ public final class ProSimulateTurnUtils {
 
     final BattleDelegate battleDelegate = data.getBattleDelegate();
     final Map<BattleType, Collection<Territory>> battleTerritories =
-        battleDelegate.getBattles().getBattles();
+        battleDelegate.getBattleListing().getBattlesMap();
     for (final Entry<BattleType, Collection<Territory>> entry : battleTerritories.entrySet()) {
       for (final Territory t : entry.getValue()) {
         final IBattle battle =
@@ -270,7 +270,6 @@ public final class ProSimulateTurnUtils {
         toData
             .getMap()
             .getTerritory(unitTerritory.getName())
-            .getUnitCollection()
             .getMatches(
                 ProMatches.unitIsOwnedAndMatchesTypeAndNotTransporting(player, u.getType()));
     for (final Unit toUnit : toUnits) {
@@ -295,7 +294,6 @@ public final class ProSimulateTurnUtils {
         toData
             .getMap()
             .getTerritory(unitTerritory.getName())
-            .getUnitCollection()
             .getMatches(
                 ProMatches.unitIsOwnedAndMatchesTypeAndIsTransporting(player, transport.getType()));
     for (final Unit toTransport : toTransports) {

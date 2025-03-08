@@ -1,15 +1,21 @@
 package games.strategy.engine.chat;
 
+import games.strategy.engine.framework.startup.mc.messages.ModeratorMessage;
+import games.strategy.engine.framework.startup.mc.messages.ModeratorPromoted;
+import games.strategy.net.IMessageListener;
+import games.strategy.net.INode;
 import games.strategy.triplea.EngineImageLoader;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import javax.swing.Action;
 import javax.swing.DefaultListCellRenderer;
@@ -23,14 +29,16 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.ListCellRenderer;
 import javax.swing.UIManager;
+import org.jetbrains.annotations.NonNls;
 import org.triplea.domain.data.ChatParticipant;
 import org.triplea.domain.data.UserName;
 import org.triplea.java.StringUtils;
+import org.triplea.swing.EventThreadJOptionPane;
 import org.triplea.swing.SwingAction;
 
 /** A UI component that displays the players participating in a chat. */
 public class ChatPlayerPanel extends JPanel implements ChatPlayerListener {
-  private static final String TAG_MODERATOR = "[Mod]";
+  @NonNls private static final String TAG_MODERATOR = "[Mod]";
   private static final long serialVersionUID = -3153022965393962945L;
   private static final Icon ignoreIcon;
 
@@ -53,6 +61,21 @@ public class ChatPlayerPanel extends JPanel implements ChatPlayerListener {
     layoutComponents();
     setupListeners();
     setChat(chat);
+    chat.addMessengersListener(
+        new IMessageListener() {
+          @Override
+          public void messageReceived(Serializable msg, INode from) {
+            if (msg instanceof ModeratorPromoted) {
+              String newModerator = ((ModeratorPromoted) msg).getPlayerName();
+              for (int i = 0; i < listModel.getSize(); i++) {
+                if (listModel.get(i).getUserName().toString().equals(newModerator)) {
+                  listModel.get(i).setModerator(true);
+                  break;
+                }
+              }
+            }
+          }
+        });
   }
 
   /** Sets the chat whose players will be displayed in this panel. */
@@ -138,6 +161,7 @@ public class ChatPlayerPanel extends JPanel implements ChatPlayerListener {
             mouseOnPlayersList(e);
           }
         });
+    final JPanel panelReference = this;
     actionFactories.add(
         clickedOn -> {
           // you can't slap or ignore yourself
@@ -155,7 +179,54 @@ public class ChatPlayerPanel extends JPanel implements ChatPlayerListener {
           final Action slap =
               SwingAction.of(
                   "Slap " + clickedOn.getUserName(), e -> chat.sendSlap(clickedOn.getUserName()));
-          return List.of(slap, ignore);
+
+          // TODO: add check for if we are moderator
+          final Action disconnect =
+              SwingAction.of(
+                  "Disconnect " + clickedOn.getUserName(),
+                  e -> {
+                    if (EventThreadJOptionPane.showConfirmDialog(
+                        panelReference,
+                        "Disconnect " + clickedOn.getUserName() + "?",
+                        "Confirm Disconnect",
+                        EventThreadJOptionPane.ConfirmDialogType.YES_NO)) {
+                      chat.getMessengers()
+                          .sendToServer(
+                              ModeratorMessage.newDisconnect(clickedOn.getUserName().getValue()));
+                    }
+                  });
+          // TODO: add check for if we are moderator
+
+          final Action ban =
+              SwingAction.of(
+                  "Ban " + clickedOn.getUserName(),
+                  e -> {
+                    if (EventThreadJOptionPane.showConfirmDialog(
+                        panelReference,
+                        "Ban " + clickedOn.getUserName() + "?",
+                        "Confirm Ban",
+                        EventThreadJOptionPane.ConfirmDialogType.YES_NO)) {
+                      chat.getMessengers()
+                          .sendToServer(
+                              ModeratorMessage.newBan(clickedOn.getUserName().getValue()));
+                    }
+                  });
+
+          List<Action> availableActions = new ArrayList<>(List.of(slap, ignore));
+
+          boolean currentPlayerIsModerator = false;
+          for (int i = 0, n = listModel.getSize(); i < n; i++) {
+            var participant = listModel.get(i);
+            if (chat.getLocalUserName().equals(participant.getUserName())) {
+              currentPlayerIsModerator = participant.isModerator();
+              break;
+            }
+          }
+
+          if (currentPlayerIsModerator && !clickedOn.isModerator()) {
+            availableActions.addAll(List.of(disconnect, ban));
+          }
+          return availableActions;
         });
   }
 
@@ -201,7 +272,8 @@ public class ChatPlayerPanel extends JPanel implements ChatPlayerListener {
           updatedPlayers.stream()
               .sorted(
                   Comparator.comparing(
-                      chatParticipant -> chatParticipant.getUserName().getValue().toUpperCase()))
+                      chatParticipant ->
+                          chatParticipant.getUserName().getValue().toUpperCase(Locale.ENGLISH)))
               .forEach(listModel::addElement);
         });
   }

@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.triplea.java.collections.CollectionUtils;
 
 /** Handy utility methods for the writers of an AI. */
@@ -45,7 +46,7 @@ public final class AiUtils {
    *
    * <p>If no such rule can be found, then return null.
    */
-  private static ProductionRule getProductionRule(
+  private static @Nullable ProductionRule getProductionRule(
       final UnitType unitType, final GamePlayer player) {
     final ProductionFrontier frontier = player.getProductionFrontier();
     if (frontier == null) {
@@ -71,7 +72,7 @@ public final class AiUtils {
     float strength = 0;
     for (final Unit u : units) {
       final UnitAttachment unitAttachment = u.getUnitAttachment();
-      if (!unitAttachment.getIsInfrastructure() && unitAttachment.getIsSea() == sea) {
+      if (!unitAttachment.isInfrastructure() && unitAttachment.isSea() == sea) {
         // 2 points since we can absorb a hit
         strength += 2;
         // two hit
@@ -98,7 +99,7 @@ public final class AiUtils {
     return strength;
   }
 
-  public static Unit getLastUnitMatching(
+  public static @Nullable Unit getLastUnitMatching(
       final List<Unit> units, final Predicate<Unit> match, final int endIndex) {
     final int index = getIndexOfLastUnitMatching(units, match, endIndex);
     if (index == -1) {

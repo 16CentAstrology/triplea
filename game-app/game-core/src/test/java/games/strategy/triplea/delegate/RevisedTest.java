@@ -79,7 +79,6 @@ import games.strategy.triplea.delegate.move.validation.MoveValidator;
 import games.strategy.triplea.settings.AbstractClientSettingTestCase;
 import games.strategy.triplea.util.TransportUtils;
 import games.strategy.triplea.xml.TestMapGameData;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -733,8 +732,8 @@ class RevisedTest extends AbstractClientSettingTestCase {
     String error =
         moveDelegate.move(sz50.getUnitCollection().getMatches(Matches.unitIsAir()), sz50To45);
     assertNull(error);
-    assertEquals(
-        1, AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattleSites(false).size());
+    final var battleTracker = AbstractMoveDelegate.getBattleTracker(gameData);
+    assertEquals(1, battleTracker.getPendingBattleSitesWithoutBombing().size());
     // we should be able to move the sub out of the sz
     final Route sz45To50 = new Route(sz45, sz50);
     final List<Unit> japSub =
@@ -744,16 +743,14 @@ class RevisedTest extends AbstractClientSettingTestCase {
     // make sure no error
     assertNull(error);
     // make sure the battle is still there
-    assertEquals(
-        1, AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattleSites(false).size());
+    assertEquals(1, battleTracker.getPendingBattleSitesWithoutBombing().size());
     // we should be able to undo the move of the sub
     error = moveDelegate.undoMove(1);
     assertNull(error);
     // undo the move of the fighter, should be no battles now
     error = moveDelegate.undoMove(0);
     assertNull(error);
-    assertEquals(
-        0, AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattleSites(false).size());
+    assertEquals(0, battleTracker.getPendingBattleSitesWithoutBombing().size());
   }
 
   @Test
@@ -842,7 +839,8 @@ class RevisedTest extends AbstractClientSettingTestCase {
     assertValid(validResults);
     moveDelegate(gameData).end();
     battle =
-        (MustFightBattle) AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(fic);
+        (MustFightBattle)
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(fic);
     // fight
     whenGetRandom(delegateBridge).thenAnswer(withValues(0)).thenAnswer(withValues(5));
     battle.fight(delegateBridge);
@@ -991,7 +989,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     assertEquals(
         BattleStepsTest.mergeSteps(
@@ -1020,7 +1018,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     assertEquals(
         BattleStepsTest.mergeSteps(
@@ -1050,7 +1048,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     assertEquals(
         BattleStepsTest.mergeSteps(
@@ -1095,7 +1093,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     /*
      * Here are the exact errata clarifications on how REVISED rules subs work:
@@ -1166,7 +1164,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     /*
      * Here are the exact errata clarifications on how REVISED rules subs work:
@@ -1236,7 +1234,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     assertEquals(
         BattleStepsTest.mergeSteps(
@@ -1291,7 +1289,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     /*
      * Here are the exact errata clarifications on how REVISED rules subs work:
@@ -1361,7 +1359,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
     moveDelegate(gameData).end();
     final MustFightBattle battle =
         (MustFightBattle)
-            AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(attacked);
+            AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(attacked);
     final List<String> steps = battle.determineStepStrings();
     assertEquals(
         BattleStepsTest.mergeSteps(
@@ -1384,8 +1382,7 @@ class RevisedTest extends AbstractClientSettingTestCase {
         bridge,
         invocation -> {
           final Collection<Unit> selectFrom = invocation.getArgument(0);
-          return new CasualtyDetails(
-              List.of(selectFrom.iterator().next()), new ArrayList<>(), false);
+          return new CasualtyDetails(List.of(selectFrom.iterator().next()), List.of(), false);
         });
     whenGetRandom(bridge)
         .thenAnswer(withValues(0))
@@ -1524,7 +1521,8 @@ class RevisedTest extends AbstractClientSettingTestCase {
         new Route(sz6, uk));
     // fight the battle
     moveDelegate(gameData).end();
-    final IBattle battle = AbstractMoveDelegate.getBattleTracker(gameData).getPendingBattle(sz6);
+    final IBattle battle =
+        AbstractMoveDelegate.getBattleTracker(gameData).getPendingNonBombingBattle(sz6);
     // everything hits, this will kill both transports
     whenGetRandom(bridge).thenAnswer(withValues(0, 0)).thenAnswer(withValues(0, 0));
     battle.fight(bridge);

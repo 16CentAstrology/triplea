@@ -227,7 +227,7 @@ public class ServerLauncher implements ILauncher {
         } else {
           final String errorMessage =
               "Unrecognized error occurred. If this is a repeatable error, "
-                  + "please make a copy of this savegame and report to:\n"
+                  + "please make a copy of this save game and report to:\n"
                   + UrlConstants.GITHUB_ISSUES;
           log.error(errorMessage, e);
           stopGame();
@@ -310,12 +310,12 @@ public class ServerLauncher implements ILauncher {
   }
 
   private void saveAndEndGame(final INode node) {
-    // a hack, if headless save to the autosave to avoid polluting our savegames folder with a
+    // a hack, if headless save to the auto save to avoid polluting our save games folder with a
     // million saves
     final Path f = launchAction.getAutoSaveFile();
     try {
       serverGame.saveGame(f);
-      gameSelectorModel.setSaveGameFileToLoad(f);
+      ClientSetting.defaultGameUri.setValueAndFlush(f.toUri().toString());
     } catch (final Exception e) {
       log.error("Failed to save game: " + f.toAbsolutePath(), e);
     }
